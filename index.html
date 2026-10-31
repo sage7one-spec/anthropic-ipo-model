@@ -137,6 +137,10 @@
       <div class="scroll"><table class="t" id="s1facts"></table></div></div>
   </div>
 
+  <div class="card" style="margin-top:16px"><h2>Customers by annual spend (TTM to Sep 30 2026)</h2>
+    <p class="hint">Exclusive tiers from the S-1's cumulative counts (Social Capital's subtraction: 11,900 − 1,900; 1,900 − 250). The "under $100k" bar (~40 million individuals and organizations) is not to scale. The revenue question is how fast the ~10,000 move up: about 1,900 have made the ROI case at $1M+, and only ~250 at $10M+.</p>
+    <div id="custTiers"></div></div>
+
   <div class="secrow"><h3>Day 1 — where the price trades, hour by hour</h3><span class="ln"></span></div>
   <div class="card">
     <h2>Probability heatmap — price &times; hour</h2>
@@ -229,13 +233,17 @@
         <select id="acct"><option value="taxable">Taxable</option><option value="roth">Roth IRA</option></select>
         <div style="display:flex;gap:6px;margin-top:6px"><input type="number" id="stRate" value="50.65" step="0.05" title="Short-term rate %"><input type="number" id="ltRate" value="33.65" step="0.05" title="Long-term rate %"></div>
         <div class="hint" style="margin-top:4px">ST % · LT % (default fed 37/20 + NIIT 3.8 + MN 9.85).</div></div>
+      <div class="ctl"><label>AI-credit shock odds <span class="val" id="shkPLbl">15%</span></label>
+        <input type="range" id="shkP" min="0" max="50" value="15"><div class="hint" style="margin-top:6px">Chance of one sector-wide drawdown within the year (see "AI-credit backdrop"). 0 = off.</div></div>
+      <div class="ctl"><label>Shock size <span class="val" id="shkSLbl">25%</span></label>
+        <input type="range" id="shkS" min="5" max="50" value="25"><div class="hint" style="margin-top:6px">One-day hit when it fires; half of it persists as multiple compression, the rest can recover.</div></div>
     </div>
     <div class="grid cols-2" style="margin-top:14px">
       <div>
         <h3 style="font-size:13.5px;margin:0 0 6px">Fundamental scenarios at month 12 <span class="hint">(my assumptions — edit them)</span></h3>
         <div class="scroll"><table class="t scen" id="scenTable"></table></div>
-        <div class="ctl" style="margin-top:8px;max-width:260px"><label>Net cash, $B <span class="val" id="cashLbl">180</span></label>
-          <input type="number" id="netCash" value="180" step="5"><div class="hint" style="margin-top:4px">S-1: $131.7B cash at 6/30/26 + assumed ~$50B primary IPO proceeds.</div></div>
+        <div class="ctl" style="margin-top:8px;max-width:260px"><label>Net cash, $B <span class="val" id="cashLbl">175</span></label>
+          <input type="number" id="netCash" value="175" step="5"><div class="hint" style="margin-top:4px">$125.4B net of debt at 6/30/26 (Social Capital; = S-1 cash $131.7B − ~$6.2B Amazon notes) + ~$50B assumed primary IPO proceeds.</div></div>
       </div>
       <div><div id="yearOut" class="verdict"></div></div>
     </div>
@@ -264,6 +272,19 @@
       <p class="hint">Sentences that use each theme's terms (8,844 words). Data centers and financing dominate; chips are fourth.</p>
       <div id="rfCompute"></div></div>
   </div>
+
+  <div class="secrow"><h3>AI-credit backdrop — the risk the S-1 can't show</h3><span class="ln"></span></div>
+  <section class="card">
+    <p class="hint">Social Capital charts from 10-K/10-Q/8-K data and Treasury's TBAC refunding (not rechecked here). Anthropic itself is cash-rich (net cash $125.4B vs Alphabet $140.0B, Meta −$1.2B), but its compute suppliers and cloud partners now fund the build-out with debt while their free cash flow shrinks. That is a correlated, sector-wide risk, which the 1-year engine carries as the <b>AI-credit shock</b> sliders (default 15% odds of a 25% drawdown).</p>
+    <div class="grid cols-2" style="align-items:start">
+      <div><h3 style="font-size:13.5px;margin:0 0 6px">Balance-sheet debt, $B (leases excluded)</h3>
+        <div class="scroll"><table class="t" id="hyperDebt"></table></div>
+        <p class="hint" style="margin-top:6px">Alphabet + Amazon + Meta: $29B at end-2019 → <b>$342B</b> now.</p></div>
+      <div><h3 style="font-size:13.5px;margin:0 0 6px">Free cash flow as % of revenue (TTM)</h3>
+        <div class="scroll"><table class="t" id="hyperFcf"></table></div>
+        <p class="hint" style="margin-top:6px">AI borrowing Jan 2026–Dec 2027 (mid case): <b>$0.9T debt</b> (range $0.4–1.3T) + $0.5T stock = $1.4T. The debt alone ≈ <b>29%</b> of Treasury's $3.0T net new notes and bonds for FY2026–27.</p></div>
+    </div>
+  </section>
 
   <div class="secrow"><h3>Street read — All-In Podcast ep. 295 (Oct 30 2026)</h3><span class="ln"></span></div>
   <section class="card">
@@ -316,7 +337,7 @@ const SPCX = BAKED_SNAPSHOT.spcx;
 const state = { pos: 100000, offerManual: null, shares: 17.4e9, w: 0.5,
   vol: sliderFromSession(BAKED_SNAPSHOT.vol.sessionSigma * IPO_DAY_VOL_MULT), N: 10000, steps: 8,
   scenario: 'balanced', risk: 50, openPx: null, ipoIso: '2026-11-20',
-  scenarios: ANT_SCENARIOS_DEFAULT.map(s => ({ ...s })), netCashB: 180 };
+  scenarios: ANT_SCENARIOS_DEFAULT.map(s => ({ ...s })), netCashB: 175 };
 let SEED = 20261120;
 let rng = mulberry32(SEED);
 const reseed = () => { rng = mulberry32(SEED); };
@@ -503,13 +524,15 @@ function renderYear(sim) {
   const anchorStrength = (+document.getElementById('anchor').value) / 100;
   const earnSig = (+document.getElementById('earn').value) / 100;
   const lvol = (+document.getElementById('lvol').value) / 1000;
+  const shockProb = (+document.getElementById('shkP').value) / 100, shockSize = (+document.getElementById('shkS').value) / 100;
+  setText('shkPLbl', Math.round(shockProb * 100) + '%'); setText('shkSLbl', Math.round(shockSize * 100) + '%');
   setText('supLbl', document.getElementById('supply').value); setText('ancLbl', document.getElementById('anchor').value);
   setText('earnLbl', (earnSig * 100).toFixed(0) + '%'); setText('lvLbl', (lvol * 100).toFixed(1) + '%');
   const scen = state.scenarios.map(s => ({ ...s, perShare: scenarioPerShare(s, state.netCashB, state.shares) }));
   const sigma0 = 0.02 + 0.18 * (state.vol / 100);
   lastYear = simulateYear({ closes: sim.closes, rng: mulberry32(SEED + 365), days: HORIZON, sigma0, sigmaLong: lvol,
     supplyCurve: SUPPLY_BASE, supplyWeight: supplyW, earningsIdx: EARN.map(e => e.idx), earningsSigma: earnSig,
-    scenarios: scen, dispersion: 0.15, anchorStrength, anchorTau: 20 });
+    scenarios: scen, dispersion: 0.15, anchorStrength, anchorTau: 20, shockProb, shockSize });
   lastYear.med = lastYear.grid.map(c => pctile(c, .5));
   renderScenTable(scen);
   renderYearView();
@@ -658,7 +681,7 @@ function renderS1() {
     { k: 'H1 2026 revenue', v: '$16.3B', c: 'pos', s: '14× H1 2025 ($1.16B)' },
     { k: 'Q2 2026 revenue', v: '$11.6B', c: 'pos', s: '2.4× Q1 · 52% left after all compute' },
     { k: 'Adj. operating margin H1', v: '+10%', c: 'pos', s: 'GAAP −4% · first positive half' },
-    { k: 'Cash & investments', v: '$131.7B', c: 'neu', s: 'June 30 2026, before the IPO' },
+    { k: 'Cash & investments', v: '$131.7B', c: 'neu', s: '$125.4B net of debt · June 30 2026, pre-IPO' },
     { k: 'Last private price', v: '$58.90/sh', c: 'neu', s: 'Series H $589.01 pref ÷ 10 · ≈$1.0T' },
     { k: 'Net revenue retention', v: '~900%', c: 'pos', s: 'as of Sep 30 2026' },
     { k: '$1M+ customers', v: '1,900+', c: 'pos', s: '~250 at $10M+ · 11,900+ at $100k+' },
@@ -693,6 +716,20 @@ function renderS1() {
       el('span', { textContent: fmt(v), style: 'text-align:right;color:#a39b94' }))); };
   bars('rfTopics', topics, 13.4, v => v + '%');
   bars('rfCompute', comp, 3311, v => v.toLocaleString());
+}
+
+function renderBackdrop() {
+  const tiers = [['Under $100k', 40e6, '~40 million (not to scale)'], ['$100k–$1M', 10000, '~10,000'], ['$1M–$10M', 1650, '~1,650'], ['$10M+', 250, '~250']];
+  const h = document.getElementById('custTiers'); h.textContent = '';
+  for (const [k, v, lab] of tiers) h.append(el('div', { className: 'rf', style: 'grid-template-columns:110px 1fr 150px' }, el('span', { textContent: k }),
+    el('div', {}, el('div', { className: 'bar', style: `width:${v > 12000 ? 100 : (v / 12000 * 100).toFixed(1)}%;${v > 12000 ? 'background:#5a5560' : k === '$10M+' ? 'background:#f0b49b' : ''}` })),
+    el('span', { textContent: lab, style: 'text-align:right;color:#a39b94' })));
+  const tbl = (id, head, rows, fmt) => { const t = document.getElementById(id); t.textContent = '';
+    const hr = el('tr'); head.forEach((x, i) => hr.append(el('th', { textContent: x, className: i ? 'r' : '' })));
+    const tb = el('tbody'); for (const r of rows) tb.append(el('tr', {}, el('td', { textContent: r[0] }), ...r.slice(1).map((v, i) => el('td', { className: 'r ' + (i === 1 ? fmt(v, r[1]) : ''), textContent: typeof v === 'number' ? (id === 'hyperFcf' ? v + '%' : '$' + v) : v }))));
+    t.append(el('thead', {}, hr), tb); };
+  tbl('hyperDebt', ['Company', 'Q4 2019', 'Latest', 'As of'], [['Alphabet', 4, 125, 'Q3 2026'], ['Amazon', 25, 133, 'Q2 2026'], ['Meta', 0, 84, 'Q3 2026'], ['Microsoft', 70, 35, 'Q3 2026'], ['Oracle', 52, 125, 'Q3 2026']], (v, a) => v > a ? 'neg' : 'pos');
+  tbl('hyperFcf', ['Company', 'Q4 2019', 'Latest', 'As of'], [['Alphabet', 19, 4, 'Q3 2026'], ['Amazon', 8, -1, 'Q2 2026'], ['Meta', 30, 12, 'Q3 2026'], ['Microsoft', 30, 17, 'Q3 2026'], ['Oracle', 31, -40, 'Q3 2026']], (v, a) => v < a ? 'neg' : 'pos');
 }
 
 function renderAllIn() {
@@ -866,7 +903,7 @@ function bind() {
   g('risk').addEventListener('input', e => { state.risk = +e.target.value; setText('riskLbl', state.risk); rerender.plan(); });
   g('openPx').addEventListener('input', e => { const v = +e.target.value; state.openPx = (e.target.value === '' || !(v > 0)) ? null : v; rerender.plan(); });
   ['bfLimit', 'bfTarget', 'bfStop'].forEach(id => g(id).addEventListener('input', rerender.bf));
-  ['supply', 'anchor', 'earn', 'lvol'].forEach(id => g(id).addEventListener('input', rerender.year));
+  ['supply', 'anchor', 'earn', 'lvol', 'shkP', 'shkS'].forEach(id => g(id).addEventListener('input', rerender.year));
   g('netCash').addEventListener('change', e => { state.netCashB = +e.target.value || 0; rerender.year(); });
   g('exitDay').addEventListener('input', e => { e.target.dataset.touched = '1'; rerender.yearView(); });
   ['acct', 'stRate', 'ltRate'].forEach(id => g(id).addEventListener('input', () => { if (lastSim) { renderExecutionPlan(lastSim); renderBottomFeed(lastSim); renderYearView(); renderScorecard(); } }));
@@ -913,7 +950,7 @@ async function fetchLive() {
 if (typeof Chart === 'undefined') {
   const w = document.querySelector('.wrap'), d = el('div', { className: 'disc', textContent: '⚠ Charts could not load: vendor/chart.umd.min.js is missing next to index.html.' });
   w.insertBefore(d, w.children[1]);
-} else { buildCalendar(); renderExitButtons(); bind(); renderS1(); renderAllIn(); render(); fetchLive(); }
+} else { buildCalendar(); renderExitButtons(); bind(); renderS1(); renderBackdrop(); renderAllIn(); render(); fetchLive(); }
 </script>
 </body>
 </html>

@@ -791,17 +791,26 @@ export function scenarioPerShare(sc, netCashB, sharesFD) {
 //   supply:    supplyWeight · supplyCurve[d−1]  (lock-up overhang, deterministic);
 //   earnings:  a zero-mean jump of earningsSigma on each earnings reaction session;
 //   anchor:    anchorStrength · (d/days) · (logT − logS) / anchorTau, where logT is a per-path
-//              terminal drawn from the fundamental scenario mixture with lognormal dispersion.
+//              terminal drawn from the fundamental scenario mixture with lognormal dispersion;
+//   shock:     with probability shockProb over the horizon, one AI-complex credit drawdown of
+//              shockSize on a uniformly random session (Social Capital: hyperscaler debt $29B →
+//              $342B since 2019, FCF margins down to −40%…17%, AI borrowing ≈ 29% of Treasury
+//              note/bond supply). Not mean-corrected: it is a downside risk the crowd may not price.
+//              shockPersist of the hit also lowers the path's fundamental terminal (multiple
+//              compression), so the anchor does not simply pull a shocked path back to where it was.
 export function simulateYear(cfg) {
   const {
     closes, rng, days, sigma0, sigmaLong = 0.03, volHalfLife = 15,
     supplyCurve = null, supplyWeight = 0,
     earningsIdx = [], earningsSigma = 0.08,
     scenarios = null, dispersion = 0.15, anchorStrength = 0, anchorTau = 20,
+    shockProb = 0, shockSize = 0, shockPersist = 0.5,
   } = cfg;
   const N = closes.length, g = () => gaussFrom(rng);
   const grid = Array.from({ length: days + 1 }, () => new Float64Array(N));
   const scen = new Int8Array(N).fill(-1);
+  const shockDay = new Int16Array(N).fill(-1);
+  const shockLog = shockSize > 0 && shockSize < 1 ? Math.log(1 - shockSize) : 0;
   const earn = new Set(earningsIdx);
   const sig = Array.from({ length: days + 1 }, (_, d) => sigmaLong + (sigma0 - sigmaLong) * Math.pow(0.5, Math.max(0, d - 1) / volHalfLife));
   const useAnchor = scenarios && scenarios.length && anchorStrength > 0;
@@ -816,17 +825,19 @@ export function simulateYear(cfg) {
       scen[p] = k;
       logT = Math.log(scenarios[k].perShare) + g() * dispersion;
     }
+    if (shockProb > 0 && shockLog && rng() < shockProb) shockDay[p] = 1 + Math.floor(rng() * days);
     for (let d = 1; d <= days; d++) {
       const s = sig[d];
       let dLog = -0.5 * s * s + g() * s;
       if (supplyCurve && supplyWeight) dLog += supplyWeight * (supplyCurve[d - 1] || 0);
       if (earn.has(d)) dLog += -0.5 * earningsSigma * earningsSigma + g() * earningsSigma;
       if (logT != null) dLog += anchorStrength * (d / days) * (logT - logS) / anchorTau;
+      if (d === shockDay[p]) { dLog += shockLog; if (logT != null) logT += shockPersist * shockLog; }
       logS += dLog;
       grid[d][p] = Math.exp(logS);
     }
   }
-  return { grid, days, scen };
+  return { grid, days, scen, shockDay };
 }
 
 // After-tax net of a gain/loss. A loss is credited at the same rate (assumes it offsets

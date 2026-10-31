@@ -143,3 +143,29 @@ test('scenario per-share and after-tax helpers', () => {
   assert.equal(afterTax(1000, 0.3), 700);
   assert.equal(afterTax(-1000, 0.3), -700);
 });
+
+test('simulateYear: AI-credit shock hits ~shockProb of paths once, by exactly shockSize', () => {
+  const N = 4000;
+  const r = simulateYear({ closes: Array(N).fill(100), rng: mulberry32(11), days: 60, sigma0: 0, sigmaLong: 0,
+    shockProb: 0.25, shockSize: 0.3 });
+  let hit = 0;
+  for (let p = 0; p < N; p++) {
+    const end = r.grid[60][p];
+    if (r.shockDay[p] > 0) { hit++; assert.ok(Math.abs(end - 70) < 1e-9); assert.ok(Math.abs(r.grid[r.shockDay[p] - 1][p] - 100) < 1e-9); }
+    else assert.ok(Math.abs(end - 100) < 1e-9);
+  }
+  assert.ok(Math.abs(hit / N - 0.25) < 0.03, `shocked share ${hit / N}`);
+  const off = simulateYear({ closes: [100], rng: mulberry32(11), days: 60, sigma0: 0, sigmaLong: 0 });
+  assert.equal(off.shockDay[0], -1);
+});
+
+test('simulateYear: half of a shock persists through the fundamental anchor (multiple compression)', () => {
+  const base = { closes: Array(400).fill(100), rng: mulberry32(5), days: 250, sigma0: 0, sigmaLong: 0,
+    scenarios: [{ p: 1, perShare: 100 }], dispersion: 0, anchorStrength: 1, anchorTau: 5 };
+  const r = simulateYear({ ...base, shockProb: 1, shockSize: 0.36, shockPersist: 0.5 });
+  for (let p = 0; p < 400; p++) if (r.shockDay[p] > 0 && r.shockDay[p] < 120)
+    assert.ok(Math.abs(r.grid[250][p] - 80) < 2, `end ${r.grid[250][p]} vs 100·0.64^0.5 = 80`);
+  const full = simulateYear({ ...base, shockProb: 1, shockSize: 0.36, shockPersist: 0 });
+  for (let p = 0; p < 400; p++) if (full.shockDay[p] > 0 && full.shockDay[p] < 120) assert.ok(full.grid[250][p] > 97);
+});
+
