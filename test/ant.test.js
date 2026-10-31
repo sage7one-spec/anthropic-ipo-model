@@ -89,6 +89,9 @@ test('antUnlockEvents: S-1 date rules land on the right sessions; weights sum to
   const fd = ev.reduce((a, e) => a + e.fracFD, 0);
   assert.ok(Math.abs(fd - (ANT_LOCKUP_DEFAULTS.pool180 + ANT_LOCKUP_DEFAULTS.pool365)) < 1e-9);
   assert.ok(ev.every(e => isTradingDay(e.iso)));
+  const q3 = ev.find(e => e.key === 'q3');
+  assert.ok(Math.abs(q3.supplyFD - q3.fracFD * ANT_LOCKUP_DEFAULTS.sellThrough[365]) < 1e-12);
+  assert.ok(ev.filter(e => e.pool === 180).every(e => e.supplyFD === e.fracFD));
 });
 
 test('earningsSessions: reaction lands the session after an after-close release', () => {

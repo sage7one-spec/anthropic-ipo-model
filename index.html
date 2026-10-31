@@ -3,75 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpaceX IPO — Day-1 Intraday Model ($135 allocation)</title>
+<title>Anthropic IPO Model</title>
+<meta name="description" content="Live Monte-Carlo model of the Anthropic (ANT) IPO: Day-1 intraday, execution plan, and a 1-year path with the S-1 lock-up calendar.">
 <script src="./vendor/chart.umd.min.js"></script>
 <style>
-  :root{--panel:#121826;--panel2:#0f1420;--line:#1e2940;--txt:#e7ecf5;--muted:#8b97ad;
-    --accent:#7c5cff;--blue:#4da3ff;--green:#28d17c;--red:#ff5c6c;--amber:#ffb648;--grid:#1a2336;}
+  :root{--bg:#0b0b0d;--panel:#16151a;--panel2:#111014;--line:#2a2730;--txt:#efe9e3;--muted:#a39b94;
+    --accent:#d97757;--accent2:#f0b49b;--blue:#6aa8ff;--green:#3ccf8e;--red:#ff6b6b;--amber:#ffb648;--cyan:#5ad1e0;--grid:#211f26;}
   *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,#070a11,#0a0e17);color:var(--txt);
+  body{margin:0;background:radial-gradient(1200px 500px at 20% -10%,#2a1a14 0%,transparent 60%),var(--bg);color:var(--txt);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1120px;margin:0 auto;padding:28px 22px 60px}
-  header h1{font-size:24px;margin:0 0 4px;letter-spacing:-.5px}
-  header .sub{color:var(--muted);font-size:13.5px;margin-bottom:6px}
-  .derived{font-size:12.5px;color:#bfa9ff;margin:6px 0 2px}
-  .pill{display:inline-block;font-size:11.5px;padding:3px 9px;border-radius:20px;background:#1a1330;border:1px solid #3a2c63;color:#cbb8ff;margin:2px 4px 2px 0}
+  .wrap{max-width:1160px;margin:0 auto;padding:28px 22px 60px}
+  @media(max-width:600px){.wrap{padding:20px 16px 48px}}
+  header h1{font-size:25px;margin:0 0 4px;letter-spacing:-.5px}
+  header .sub{color:var(--muted);font-size:13.5px;margin-bottom:6px;max-width:900px}
+  .derived{font-size:12.5px;color:var(--accent2);margin:6px 0 2px}
+  .pill{display:inline-block;font-size:11.5px;padding:3px 9px;border-radius:20px;background:#24170f;border:1px solid #5a3422;color:#f3c3ab;margin:2px 4px 2px 0}
   .pill.warn{background:#2a1e10;border-color:#5a3d17;color:#ffcf8f}
   .pill.green{background:#0f2a1d;border-color:#1d6a45;color:#7ff0b6}
+  .pill.blue{background:#0f1a2a;border-color:#22406a;color:#a8c9ff}
   .grid{display:grid;gap:16px}.cols-2{grid-template-columns:1fr 1fr}
   @media(max-width:880px){.cols-2{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .card h2{font-size:14px;margin:0 0 2px}.card .hint{color:var(--muted);font-size:12px;margin:0 0 12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+  .card h2{font-size:14.5px;margin:0 0 2px}.hint{color:var(--muted);font-size:12px;margin:0 0 12px}
   canvas{max-width:100%}
-  .cbox{position:relative;width:100%;height:280px}
-  .cbox.tall{height:320px}.cbox.short{height:230px}
+  .cbox{position:relative;width:100%;height:280px}.cbox.short{height:230px}
   .heatwrap{position:relative;width:100%;height:320px}
-  .heattip{position:absolute;pointer-events:none;display:none;background:#0b0f1a;border:1px solid #2a3650;border-radius:7px;
+  .heattip{position:absolute;pointer-events:none;display:none;background:#0d0c10;border:1px solid #3a3440;border-radius:7px;
     padding:6px 9px;font-size:11.5px;color:var(--txt);transform:translate(-50%,-118%);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.5);z-index:5}
   .heatleg{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
-  .heatleg .grad{height:11px;width:170px;border-radius:3px;background:linear-gradient(90deg,#0a0e17,#3a2c63,#7c5cff,#b58bff,#ffe7a0)}
+  .heatleg .grad{height:11px;width:170px;border-radius:3px;background:linear-gradient(90deg,#0b0b0d,#46281f,#aa553c,#d97757,#ffe7c4)}
   .heatleg .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
-  .controls{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
-  @media(max-width:880px){.controls{grid-template-columns:1fr 1fr}}
+  .controls{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  @media(max-width:980px){.controls{grid-template-columns:1fr 1fr 1fr}}
+  @media(max-width:600px){.controls{grid-template-columns:1fr 1fr}}
   .ctl label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-  .ctl .val{color:var(--accent);font-weight:600}
+  .ctl .val{color:var(--accent2);font-weight:600}
   input[type=range]{width:100%;accent-color:var(--accent)}
-  input[type=number]{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:14px}
+  input[type=number],input[type=date],select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 9px;font-size:14px}
   .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:4px}
   @media(max-width:880px){.metrics{grid-template-columns:1fr 1fr}}
-  .metric{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .metric{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
   .metric .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-  .metric .v{font-size:22px;font-weight:700;margin-top:3px}.metric .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .metric .v{font-size:21px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}.metric .s{font-size:11.5px;color:var(--muted);margin-top:2px}
   .pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--amber)}
-  .verdict{background:linear-gradient(135deg,#160f2a,#1a1433);border:1px solid #3a2c63;border-radius:14px;padding:20px}
+  .verdict{background:linear-gradient(135deg,#1d130f,#1a1414);border:1px solid #4a2f24;border-radius:14px;padding:18px 20px}
   .verdict .lead{font-size:15px;line-height:1.6}.verdict b{color:#fff}
-  .foot{color:var(--muted);font-size:12px;margin-top:18px;line-height:1.6}.foot b{color:#c5cfe0}
+  .foot{color:var(--muted);font-size:12px;margin-top:18px;line-height:1.6}.foot b{color:#ddd3cb}
   .disc{background:#1c1208;border:1px solid #4a2f12;color:#ffcf9c;border-radius:12px;padding:14px 16px;font-size:12.5px;line-height:1.6;margin-top:18px}
   a{color:var(--blue)}
-  .secrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:26px 0 12px}
+  .secrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 12px}
   .secrow h3{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0}
   .secrow .ln{flex:1;height:1px;background:var(--line)}
-  .btn{background:#231a3e;border:1px solid var(--accent);color:#cbb8ff;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px}
-  #liveStrip .s{color:var(--muted)}
+  .btn{background:#2a1810;border:1px solid var(--accent);color:#f3c3ab;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12.5px}
+  .btn.sm{padding:4px 9px;font-size:11.5px}
+  table.t{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+  table.t th{text-align:left;color:#b9a99c;font-weight:600;padding:6px 10px;border-bottom:1px solid var(--line)}
+  table.t td{padding:6px 10px;border-top:1px solid #221f26}
+  table.t td.r,table.t th.r{text-align:right}
+  .scroll{overflow-x:auto}
+  .vc{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:880px){.vc{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.vc{grid-template-columns:1fr}}
+  .vcb{border-radius:12px;padding:14px;border:1px solid var(--line);background:var(--panel2);min-width:0}
+  .vcb h4{margin:0 0 6px;font-size:13px}.vcb .big{font-size:24px;font-weight:800}.vcb .s{font-size:11.5px;color:var(--muted)}
+  .fix{color:#ffcf8f;font-size:11.5px;margin-top:6px}
+  .bar{height:12px;border-radius:3px;background:var(--accent)}
+  .rf{display:grid;grid-template-columns:120px 1fr 52px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0}
+  .scen input{width:78px;padding:5px 6px;font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>&#128640; SpaceX IPO — Day-1 Intraday Model</h1>
-    <div class="sub">You bought the $135 pre-IPO allocation. This models the probable price path across the Day-1 trading session, with the close blended from live Hyperliquid and Polymarket data.</div>
+    <h1>Anthropic (ANT) IPO — Day-1 to 1-Year Model</h1>
+    <div class="sub">You requested the pre-IPO allocation. This models the Day-1 session (close blended from live Hyperliquid <code>xyz:ANT</code> and Polymarket), a scaled Fidelity sell plan, and a 1-year path built on the S-1's actual lock-up calendar, earnings dates, and bull/base/bear fundamentals — calibrated against how SpaceX (SPCX) really traded after its June IPO.</div>
     <div class="derived" id="derived"></div>
     <div style="margin-top:8px">
-      <span class="pill warn">&#9888; June 11 / $135 are your inputs — unverified; Polymarket backstop is Dec 31 2027. Confirm with Fidelity.</span>
-      <span class="pill green">P(close &gt; $135) ≈ <b id="ppPill">90%</b></span>
+      <span class="pill warn">&#9888; S-1 filed Oct 26 2026: price range, share count &amp; date are still blank. Until they're set, the allocation price defaults to the live Polymarket IPO-valuation median ÷ FD shares.</span>
+      <span class="pill green">P(Day-1 close &gt; offer) ≈ <b id="ppPill">—</b></span>
+      <span class="pill blue">Built by Claude, an Anthropic model, from the public S-1 and public market data only</span>
     </div>
     <div id="liveStrip" class="card" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px">
       <span id="liveBadge" class="pill">snapshot</span>
-      <span>SPCX <b id="hlMark">—</b> <span id="hlChg" class="s"></span></span>
-      <span>Poly median/sh <b id="polyPx">—</b></span>
+      <span>HL <code>xyz:ANT</code> <b id="hlMark">—</b> <span id="hlChg" style="color:var(--muted)"></span></span>
+      <span>Poly IPO price/sh <b id="polyOffer">—</b></span>
+      <span>Poly Day-1 close/sh <b id="polyPx">—</b></span>
+      <span id="popChip" class="pill"></span>
       <span id="disChip" class="pill"></span>
       <span id="fundChip" class="pill"></span>
-      <span class="s" id="asOf"></span>
+      <span id="dateChip" class="pill"></span>
+      <span id="raiseChip" class="pill"></span>
+      <span style="color:var(--muted)" id="asOf"></span>
       <button class="btn" id="refresh">&#10227; Refresh data</button>
     </div>
   </header>
@@ -80,15 +102,17 @@
   <div class="card">
     <div class="controls">
       <div class="ctl"><label>Position size <span class="val" id="posLbl">$100,000</span></label>
-        <input type="number" id="pos" value="100000" min="1000" step="1000"><div class="hint" style="margin-top:6px">Shares ≈ position ÷ $135.</div></div>
-      <div class="ctl"><label>Allocation price (entry) <span class="val" id="offerLbl">$135</span></label>
-        <input type="number" id="offer" value="135" min="1" step="1"><div class="hint" style="margin-top:6px">What Fidelity sells it to you for.</div></div>
-      <div class="ctl"><label>Hyperliquid ⇄ Polymarket weight <span class="val" id="wLbl">50%</span></label>
-        <input type="range" id="w" min="0" max="100" value="50"><div class="hint" style="margin-top:6px">0% = pure Polymarket close · 100% = pure Hyperliquid mark.</div></div>
-      <div class="ctl"><label>Shares outstanding <span class="val" id="shLbl">12.96B</span></label>
-        <input type="number" id="shares" value="12.96" min="1" max="30" step="0.01"><div class="hint" style="margin-top:6px">Converts Polymarket market-cap odds → $/share.</div></div>
-      <div class="ctl"><label>Intraday volatility <span class="val" id="volLbl">6</span> / 100</label>
-        <input type="range" id="vol" min="0" max="100" value="6"><div class="hint" style="margin-top:6px">How wild the swings are between open and close. Default = SPCX realized vol × 2 IPO-day multiplier.</div></div>
+        <input type="number" id="pos" value="100000" min="1000" step="1000"><div class="hint" style="margin-top:6px">Dollars at the allocation price.</div></div>
+      <div class="ctl"><label>Allocation price <span class="val" id="offerLbl">live</span></label>
+        <input type="number" id="offer" min="1" step="0.5" placeholder="live"><div class="hint" style="margin-top:6px">Blank = live Polymarket IPO valuation ÷ FD shares. Type the real price once set.</div></div>
+      <div class="ctl"><label>FD shares <span class="val" id="shLbl">17.40B</span></label>
+        <input type="number" id="shares" value="17.4" min="5" max="40" step="0.05"><div class="hint" style="margin-top:6px">S-1: 846.8M PBF shares = 5% of FD → 16.94B, + ~0.5B assumed IPO primary.</div></div>
+      <div class="ctl"><label>Hyperliquid ⇄ Polymarket <span class="val" id="wLbl">50%</span></label>
+        <input type="range" id="w" min="0" max="100" value="50"><div class="hint" style="margin-top:6px">0% = pure Polymarket close · 100% = pure HL mark.</div></div>
+      <div class="ctl"><label>Intraday volatility <span class="val" id="volLbl">10</span>/100</label>
+        <input type="range" id="vol" min="0" max="100" value="10"><div class="hint" style="margin-top:6px">Default = ANT perp realized vol × 2 IPO-day multiplier.</div></div>
+      <div class="ctl"><label>First trading day <span class="val" id="ipoLbl">—</span></label>
+        <input type="date" id="ipoDate" value="2026-11-20"><div class="hint" style="margin-top:6px">Default = Polymarket's most likely date. Re-dates the whole calendar.</div></div>
     </div>
   </div>
 
@@ -97,749 +121,758 @@
   <div class="secrow"><h3>Verdict</h3><span class="ln"></span></div>
   <div class="verdict"><div class="lead" id="verdict"></div></div>
 
-  <section class="card" id="scoreSection" style="margin-top:16px">
-    <div class="secrow"><h2 id="scoreHdr">Three-strategy scorecard — net $ on $100,000</h2><span class="ln"></span></div>
-    <p class="hint">Every figure is net absolute dollar change on the same capital base (your position size, default $100,000). All three strategies are scored on the <i>same</i> 10,000 simulated paths. <b>A</b> = buy the $135 allocation, sell Day 1. <b>B</b> = bottom-feed a Day-1 dip ≤ $135 in the open market (cash; $0 when it never fills). <b>C</b> = hold the $135 allocation to the chosen exit day.</p>
-    <div id="scorecard" style="overflow-x:auto"></div>
+  <section class="card" style="margin-top:16px">
+    <h2 id="scoreHdr">Three-strategy scorecard</h2>
+    <p class="hint">Net dollar change on the same capital base, all scored on the <i>same</i> 10,000 simulated paths. <b>A</b> = buy the allocation, sell Day 1 with the plan below. <b>B</b> = bottom-feed a Day-1 dip in the open market (cash; $0 when it never fills). <b>C</b> = hold the allocation to the exit session you pick in the 1-year section. After-tax uses your rates there (Day-1 and sub-1-year exits are short-term).</p>
+    <div id="scorecard" class="scroll"></div>
   </section>
 
-  <div class="secrow"><h3>Intraday Probability — where the price trades, hour by hour</h3><span class="ln"></span></div>
+  <div class="secrow"><h3>S-1 at a glance</h3><span class="ln"></span></div>
+  <div class="metrics" id="s1kpis"></div>
+  <div class="grid cols-2" style="margin-top:16px;align-items:start">
+    <div class="card"><h2>Quarterly revenue vs. compute &amp; infrastructure ($B)</h2>
+      <p class="hint">S-1 "Quarterly Results of Operations." Revenue went from below compute cost to roughly double it in two quarters: Q2'26 revenue $11.6B vs $5.6B compute (52% left after <i>all</i> compute, training included).</p>
+      <div class="cbox short"><canvas id="qChart"></canvas></div></div>
+    <div class="card"><h2>What the S-1 discloses that moves the stock</h2>
+      <div class="scroll"><table class="t" id="s1facts"></table></div></div>
+  </div>
+
+  <div class="secrow"><h3>Day 1 — where the price trades, hour by hour</h3><span class="ln"></span></div>
   <div class="card">
     <h2>Probability heatmap — price &times; hour</h2>
-    <p class="hint">10,000 simulated paths from the opening print to the blended close. Brighter = more paths sit at that price in that hour. White line = median path; dashed amber = your $135 entry — you're in profit above it. Hover for the exact odds.</p>
+    <p class="hint">10,000 paths from the opening print to the blended close. Brighter = more paths at that price in that hour. White = median path; dashed amber = your allocation price (profit above it). Hover for exact odds.</p>
     <div class="heatwrap"><canvas id="heatChart"></canvas><div id="heatTip" class="heattip"></div></div>
     <div class="heatleg">
       <span>less likely</span><span class="grad"></span><span>more likely</span>
-      <span style="margin-left:2px">brightest ≈ <b id="heatPeak">—</b> of paths per cell</span>
+      <span>brightest ≈ <b id="heatPeak">—</b> of paths per cell</span>
       <span style="margin-left:8px"><span class="sw" style="background:#fff"></span>median path</span>
-      <span><span class="sw" style="background:#ffb648"></span><b id="heatEntryLbl">$135</b> entry</span>
+      <span><span class="sw" style="background:#ffb648"></span><b id="heatEntryLbl">offer</b> entry</span>
     </div>
     <h2 style="margin-top:24px">What price will you see? — touch probability</h2>
-    <p class="hint">For each price level, the chance the stock trades there at <i>some point</i> during the day — not just at the close. Green = in profit above $135; red = underwater.</p>
+    <p class="hint">Chance the stock trades at each price at <i>some point</i> during the day. Green = above your allocation price; red = below.</p>
     <div class="cbox short"><canvas id="touchChart"></canvas></div>
   </div>
-
-  <div class="secrow"><h3>Day-1 Outcomes</h3><span class="ln"></span></div>
-  <div class="grid cols-2">
-    <div class="card"><h2>Closing price distribution (blended)</h2>
-      <p class="hint">Where it settles at 4pm. Dashed line = your $135 break-even; everything right of it is profit.</p>
+  <div class="grid cols-2" style="margin-top:16px">
+    <div class="card"><h2>Closing price distribution</h2>
+      <p class="hint">Where it settles at 4pm ET. Green = above the allocation price.</p>
       <div class="cbox short"><canvas id="closeChart"></canvas></div></div>
-    <div class="card"><h2>Intraday low &amp; high — the day's swing</h2>
-      <p class="hint">The lowest (red) and highest (green) price it touches at some point during the day, in $/share. Your $135 entry sits at the far left.</p>
+    <div class="card"><h2>Intraday low &amp; high</h2>
+      <p class="hint">Each path's lowest (red) and highest (green) print, in $/share.</p>
       <div class="cbox short"><canvas id="rangeChart"></canvas></div></div>
   </div>
-
-  <div class="secrow"><h3>Polymarket Source Odds (live)</h3><span class="ln"></span></div>
-  <div class="card"><h2>P(closing market cap above threshold)</h2>
-    <p class="hint">The crowd-sourced curve that sets the close spread — shown timing-normalized: raw Polymarket prices are divided by their low-threshold plateau (≈ the crowd's P(IPO happens at all)) so the model uses P(cap &gt; X | IPO).</p>
+  <div class="card" style="margin-top:16px"><h2>Polymarket source odds (live) — IPO pricing vs. Day-1 close</h2>
+    <p class="hint">P(market cap &gt; X), conditional on the IPO happening (each bucket market's "No IPO" leg is split off and the rest renormalized). The gap between the two curves is the crowd's expected first-day pop.</p>
     <div class="cbox short"><canvas id="survChart"></canvas></div></div>
 
-<section class="card" id="execSection" style="margin-top:16px">
-  <div class="secrow"><h2>Execution Plan — Day 1 (flat by close)</h2><span class="ln"></span></div>
-  <p class="hint">A scaled sell plan for your $135 allocation, scored against all 10,000 simulated paths.
-    Pick a posture; the levels, tickets, and odds re-compute live. Selling within Fidelity's first
-    <b>15 calendar days</b> is a "flip" (6-month IPO-access block, first offense) — see the 20-day hold fan (Case C) below.</p>
-
-  <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0">
-    <div id="scenBtns" style="display:flex;gap:8px"></div>
-    <div class="ctl" style="min-width:200px">
-      <label>Opening print <span class="val" id="openPxLbl">model</span></label>
-      <input type="number" id="openPx" min="1" step="0.01" placeholder="use model open">
-      <div class="hint">Profit-taking rungs hang off this price. Blank = the model's expected open; on IPO day, type the actual first print.</div>
+  <section class="card" style="margin-top:16px">
+    <div class="secrow" style="margin-top:0"><h2>Case A — Execution plan, Day 1 (flat by close)</h2><span class="ln"></span></div>
+    <p class="hint">A scaled sell plan for the allocation, scored against all 10,000 paths. Pick a posture; levels, tickets and odds re-compute live. Selling within Fidelity's first <b>15 calendar days</b> is a "flip" (6-month IPO-access block, first offense) — weigh that against Case C.</p>
+    <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin:10px 0">
+      <div id="scenBtns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <div class="ctl" style="min-width:200px;flex:1">
+        <label>Opening print <span class="val" id="openPxLbl">model</span></label>
+        <input type="number" id="openPx" min="1" step="0.01" placeholder="use model open">
+      </div>
+      <div class="ctl" style="min-width:220px;flex:1">
+        <label>Protection aggressiveness <span class="val" id="riskLbl">50</span></label>
+        <input type="range" id="risk" min="0" max="100" value="50">
+      </div>
     </div>
-    <div class="ctl" style="min-width:240px">
-      <label>Protection aggressiveness <span class="val" id="riskLbl">50</span></label>
-      <input type="range" id="risk" min="0" max="100" value="50">
-      <div class="hint">Left = bigger core sold at the open + tighter stops (protect). Right = smaller core, higher rungs (ride upside).</div>
+    <div id="recoveryNote" class="verdict" style="margin:8px 0"></div>
+    <div class="metrics" id="execMetrics"></div>
+    <h3 style="margin-top:16px;font-size:14px">Fidelity order tickets <span class="hint">(Active Trader Pro · OCO brackets · TIF Day)</span></h3>
+    <div id="ticketTable" class="scroll"></div>
+    <h3 style="margin-top:14px;font-size:14px">Intraday checkpoints</h3>
+    <div id="checkpointList" class="hint"></div>
+
+    <h3 style="margin-top:18px;font-size:14px">Case B — bottom-feeder: buy a Day-1 dip in the open market</h3>
+    <p class="hint">A separate cash play the size of your position: a limit BUY that fills only if ANT trades down to your price on Day 1, then an OCO bracket exits the same day. No fill = keep your cash, $0.</p>
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      <div class="ctl" style="min-width:150px"><label>Limit buy price <span class="val" id="bfLimitLbl">offer</span></label>
+        <input type="number" id="bfLimit" min="1" step="0.5" placeholder="= offer"></div>
+      <div class="ctl" style="min-width:150px"><label>Profit target <span class="val" id="bfTargetLbl">6%</span></label>
+        <input type="range" id="bfTarget" min="0" max="30" value="6"></div>
+      <div class="ctl" style="min-width:150px"><label>Stop loss <span class="val" id="bfStopLbl">5%</span></label>
+        <input type="range" id="bfStop" min="0" max="30" value="5"></div>
     </div>
-  </div>
+    <div id="bfOut" class="verdict" style="margin:10px 0"></div>
+    <div id="bfTicket"></div>
+  </section>
 
-  <div id="recoveryNote" class="verdict" style="margin:8px 0"></div>
-  <div class="metrics" id="execMetrics"></div>
+  <div class="secrow"><h3>Case C — hold the allocation: the first year</h3><span class="ln"></span></div>
+  <section class="card">
+    <h2>1-year probability heatmap — by trading day, on the S-1 lock-up calendar</h2>
+    <p class="hint">Each path starts at its own Day-1 close and walks forward to the first long-term-capital-gains session. Ingredients: IPO-hot volatility decaying to SPCX's realized level; a lock-up <b>supply overhang</b> that sells off into each S-1 unlock and partly recovers after (SPCX fell 35% into its first big tranche, then bounced); zero-mean <b>earnings jumps</b>; and a soft pull toward a <b>bull/base/bear fundamental value</b> (run-rate × multiple + net cash). White = median; amber dashed = allocation price; <span style="color:#5ad1e0">cyan = what SPCX actually did</span>, rebased to ANT's median Day-1 close; red ticks along the bottom = unlock tranches (height ∝ share of stock); blue = earnings; purple = Fidelity flip-lock end; green = your exit.</p>
+    <div class="heatwrap" style="height:400px"><canvas id="yearHeat"></canvas><div id="yearTip" class="heattip"></div></div>
+    <div class="heatleg">
+      <span>less likely</span><span class="grad"></span><span>more likely</span>
+      <span>brightest ≈ <b id="yheatPeak">—</b> of paths per cell</span>
+      <span style="margin-left:8px"><span class="sw" style="background:#fff"></span>median</span>
+      <span><span class="sw" style="background:#ffb648"></span>allocation price</span>
+      <span><span class="sw" style="background:#5ad1e0"></span>SPCX actual (rebased)</span>
+      <span><span class="sw" style="background:#ff6b6b"></span>unlocks</span>
+      <span><span class="sw" style="background:#6aa8ff"></span>earnings</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px" id="exitBtns"></div>
+    <div class="controls" style="margin-top:12px">
+      <div class="ctl"><label>Exit session <span class="val" id="exitLbl">—</span></label>
+        <input type="range" id="exitDay" min="1" max="252" value="252"></div>
+      <div class="ctl"><label>Lock-up supply pressure <span class="val" id="supLbl">50</span>/100</label>
+        <input type="range" id="supply" min="0" max="100" value="50"><div class="hint" style="margin-top:6px">50 = kappa 1.0: a tranche selling 9% of the stock ≈ −9% into it, half given back (SPCX-calibrated). Founder/strategic 365-day stock counts at 50% sell-through. 0 = ignore unlocks.</div></div>
+      <div class="ctl"><label>Fundamental anchor <span class="val" id="ancLbl">40</span>/100</label>
+        <input type="range" id="anchor" min="0" max="100" value="40"><div class="hint" style="margin-top:6px">How hard paths are pulled toward the scenario values below by month 12.</div></div>
+      <div class="ctl"><label>Earnings-day move (1σ) <span class="val" id="earnLbl">8%</span></label>
+        <input type="range" id="earn" min="0" max="20" value="8"></div>
+      <div class="ctl"><label>Long-run daily vol <span class="val" id="lvLbl">3.0%</span></label>
+        <input type="range" id="lvol" min="15" max="50" value="30"><div class="hint" style="margin-top:6px">SPCX realized ≈ 3.05%/day (48% annualized), Oct 2026.</div></div>
+      <div class="ctl"><label>Account <span class="val" id="acctLbl">Taxable</span></label>
+        <select id="acct"><option value="taxable">Taxable</option><option value="roth">Roth IRA</option></select>
+        <div style="display:flex;gap:6px;margin-top:6px"><input type="number" id="stRate" value="50.65" step="0.05" title="Short-term rate %"><input type="number" id="ltRate" value="33.65" step="0.05" title="Long-term rate %"></div>
+        <div class="hint" style="margin-top:4px">ST % · LT % (default fed 37/20 + NIIT 3.8 + MN 9.85).</div></div>
+    </div>
+    <div class="grid cols-2" style="margin-top:14px">
+      <div>
+        <h3 style="font-size:13.5px;margin:0 0 6px">Fundamental scenarios at month 12 <span class="hint">(my assumptions — edit them)</span></h3>
+        <div class="scroll"><table class="t scen" id="scenTable"></table></div>
+        <div class="ctl" style="margin-top:8px;max-width:260px"><label>Net cash, $B <span class="val" id="cashLbl">180</span></label>
+          <input type="number" id="netCash" value="180" step="5"><div class="hint" style="margin-top:4px">S-1: $131.7B cash at 6/30/26 + assumed ~$50B primary IPO proceeds.</div></div>
+      </div>
+      <div><div id="yearOut" class="verdict"></div></div>
+    </div>
+    <h3 style="font-size:13.5px;margin:16px 0 6px">Key sessions in the first year <span class="hint">(click a row to set it as the exit)</span></h3>
+    <div class="scroll"><table class="t" id="keyDates"></table></div>
+  </section>
 
-  <h3 style="margin-top:14px">Fidelity order tickets <span class="hint">(Active Trader Pro · OCO brackets · TIF Day)</span></h3>
-  <div id="ticketTable"></div>
-  <h3 style="margin-top:14px">Intraday checkpoints</h3>
-  <div id="checkpointList" class="hint"></div>
+  <div class="secrow"><h3>The value chain — $1 of Nvidia COGS</h3><span class="ln"></span></div>
+  <section class="card">
+    <p class="hint">Your third chart, checked against the S-1 where the filing has the numbers. Read right to left: GPU cost → GPU revenue → compute rent → Anthropic revenue → customer value. Amber notes mark where the chart and the S-1 differ.</p>
+    <div class="vc">
+      <div class="vcb" style="border-color:#1d6a45"><h4 style="color:#7ff0b6">Customers</h4><div class="big pos">$36–178</div><div class="s">per year · "2–10× what they pay"</div><div class="fix">Pure assumption — the S-1 only says Fortune 500 customers spend &lt;0.1% of their expenses on Claude (top-10: &lt;1%).</div></div>
+      <div class="vcb" style="border-color:#7a3e27"><h4 style="color:#f0b49b">Anthropic</h4><div class="big" style="color:#f0b49b">$17.8</div><div class="s">per year · 52% after all compute (Q2: $11.6B rev, $5.6B compute) ✓ S-1</div><div class="fix">"85% gross (serving only)" is not in the S-1 — it reports one fungible compute pool, no serving-only margin. Treat 85% as unverified.</div></div>
+      <div class="vcb" style="border-color:#22406a"><h4 style="color:#a8c9ff">SpaceXAI</h4><div class="big" style="color:#a8c9ff">$8.6</div><div class="s">per year · ~83% margin after depreciation + power</div><div class="fix">Chart assumes $1.25B/mo. S-1: up to <b>$120.5B</b> into 2029, ≈<b>$3.1B/mo</b> once fully delivered (Dec 2026) — 2.5× larger; cancellable on 90 days' notice after Jan/Mar 2027.</div></div>
+      <div class="vcb" style="border-color:#4a6a1d"><h4 style="color:#c8f07f">Nvidia</h4><div class="big" style="color:#c8f07f">$4.00</div><div class="s">on $1.00 COGS · 75% gross</div><div class="fix">Third-party figures (Tom Tunguz on NVDA Q2 FY27); not in the S-1.</div></div>
+    </div>
+    <p class="hint" style="margin-top:12px">Why it matters for ANT: the named compute contracts in the S-1 (SpaceXAI $120.5B, Broadcom leases $161.2B, Nscale $44.6B, Lambda $41.3B, AMD &gt;$20B — ≈$388B before the AWS/Google/Microsoft agreements) are the biggest fixed claim on the revenue line, and compute is the topic the risk factors spend the most words on (next panel).</p>
+  </section>
 
-  <h3 style="margin-top:16px">Case B — bottom-feeder: buy the Day-1 dip ≤ $135 (open market, no flip-window lock)</h3>
-  <p class="hint">A separate cash play of the same size as your position: a limit BUY that fills only if SPCX trades down to your price on Day 1, then an OCO bracket (profit target / stop) exits the same day. If it never dips to your limit, nothing fills — you keep your cash, $0 change. Scored on the same simulated paths as Case A.</p>
-  <div class="ctlrow" style="display:flex;gap:18px;flex-wrap:wrap">
-    <div class="ctl"><label>Limit buy price <span class="val" id="bfLimitLbl">$135</span></label>
-      <input type="number" id="bfLimit" value="135" min="1" step="1"><div class="hint">Fills only if the day trades at/below this.</div></div>
-    <div class="ctl"><label>Profit target <span class="val" id="bfTargetLbl">6%</span></label>
-      <input type="range" id="bfTarget" min="0" max="30" value="6"><div class="hint">Sell-limit above your fill.</div></div>
-    <div class="ctl"><label>Stop loss <span class="val" id="bfStopLbl">5%</span></label>
-      <input type="range" id="bfStop" min="0" max="30" value="5"><div class="hint">Sell-stop below your fill.</div></div>
+  <div class="secrow"><h3>What the S-1 worries about most</h3><span class="ln"></span></div>
+  <div class="grid cols-2">
+    <div class="card"><h2>Risk-factor share of words, by topic</h2>
+      <p class="hint">Social Capital's grouping of the 88 risk factors (65,918 words). Emphasis, not severity.</p>
+      <div id="rfTopics"></div></div>
+    <div class="card"><h2>Inside "Compute" — words by theme</h2>
+      <p class="hint">Sentences that use each theme's terms (8,844 words). Data centers and financing dominate; chips are fourth.</p>
+      <div id="rfCompute"></div></div>
   </div>
-  <div id="bfOut" class="verdict" style="margin:10px 0"></div>
-  <h4 style="margin-top:10px">Fidelity tickets (Case B)</h4>
-  <div id="bfTicket"></div>
-
-  <h3 style="margin-top:16px">Case C — hold the $135 allocation: 20-day probability heatmap (by trading day)</h3>
-  <p class="hint">If you hold the allocation through Fidelity's <b>15-calendar-day</b> flip window (counted in calendar days, not trading sessions — it ends over the Jun 27–28 weekend, so the first penalty-free sale is <b>Mon Jun 29</b>), this is the daily price distribution over the first 20 trading sessions, dated on the real NYSE calendar (Juneteenth and Jul 3 closed). <b>Brighter = more paths sit at that price that day.</b> White = median path; dashed amber = your $135 basis (bands below it are underwater); purple marker = flip-lock end (<b>Mon Jun 29</b>); blue marker = the <b>Jul 7 Nasdaq-100</b> inclusion; green marker = your chosen exit day; dotted red = Grok's $270 zone. Sliders default to my recommended planning overlay — zero any of them out for a pure martingale.</p>
-  <div class="heatwrap" style="height:380px"><canvas id="fan20"></canvas><div id="fan20Tip" class="heattip"></div></div>
-  <div class="heatleg">
-    <span>less likely</span><span class="grad"></span><span>more likely</span>
-    <span style="margin-left:2px">brightest ≈ <b id="dheatPeak">—</b> of paths per cell</span>
-    <span style="margin-left:8px"><span class="sw" style="background:#fff"></span>median</span>
-    <span><span class="sw" style="background:#ffb648"></span>$135 basis</span>
-    <span><span class="sw" style="background:#ff5c6c"></span>$270 Grok zone</span>
-  </div>
-  <div class="ctlrow" style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px">
-    <div class="ctl"><label>Historical drift weight <span class="val" id="driftWLbl">20</span>/100</label>
-      <input type="range" id="driftW" min="0" max="100" value="20"><div class="hint">0 = martingale. Default 20 = a light lean on the mega-IPO fade-then-recover shape.</div></div>
-    <div class="ctl"><label>Polymarket anchor <span class="val" id="anchorSLbl">40</span>/100</label>
-      <input type="range" id="anchorS" min="0" max="100" value="40"><div class="hint">How strongly the live crowd close-cap pulls the terminal. Default 40 — the most defensible signal.</div></div>
-    <div class="ctl"><label>Index-inclusion event overlay <span class="val" id="eventWLbl">50</span>/100</label>
-      <input type="range" id="eventW" min="0" max="100" value="50"><div class="hint">Forced passive-buy impulses on the Jun 18–22 + Jul 7 catalyst days (the Mertz/Grok float-deficit thesis). Default 50. Set 0 to remove.</div></div>
-    <div class="ctl"><label>Exit day <span class="val" id="exitDayLbl">10 · Mon Jun 29</span></label>
-      <input type="range" id="exitDay" min="1" max="20" value="10"><div class="hint">Net $ on $100k and underwater odds if you exit on this session. Default 10 = Mon Jun 29, the first penalty-free exit after Fidelity's 15-calendar-day flip window. Slide right to test holding through the Jul 7 Nasdaq-100 inclusion (day 15) or the ~1-month mark (day 17).</div></div>
-  </div>
-  <div id="fan20Out" class="verdict" style="margin:10px 0"></div>
-</section>
 
   <div class="foot">
-    <b>How it works.</b> Each of 10,000 paths samples a Day-1 <i>closing</i> market cap from the live Polymarket distribution (timing-normalized by the crowd's P(IPO)) → a closing price (cap ÷ shares outstanding), then re-centers it toward the blend of the Hyperliquid <code>xyz:SPCX</code> mark and the Polymarket-implied price (weight slider). The opening print is drawn from historical mega-IPO open-to-close behavior, then a Brownian-bridge random walk (scaled by your intraday-volatility setting) connects the open to that close across 8 hourly steps. Between the hourly nodes, each interval's high and low are sampled from the bridge's closed-form extreme-value law, so touch, stop, and fill events are detected continuously rather than only on the hour. The fan shows the percentile envelope of those paths; the low/high charts show each path's intraday extremes.
+    <b>How it works.</b> Day 1: each of 10,000 paths samples a closing market cap from the live Polymarket Day-1 close-cap buckets, converts it to $/share with the FD share count, and re-centers it toward the blend of the Hyperliquid <code>xyz:ANT</code> mark and the Polymarket-implied price. The open is drawn from historical mega-IPO open-to-close returns; a Brownian bridge connects open to close in 8 hourly steps, with interval extremes sampled in closed form so touches, stops and fills are detected continuously. The 1-year engine walks every Day-1 close forward with decaying volatility, the deterministic lock-up overhang, earnings jumps, and a draw from the fundamental scenario mixture. The SpaceX engine underneath is unchanged and keeps its 62 unit tests; the ANT extensions add 14 more, all on verbatim captures of the live payloads.
     <br><br>
-    <b>Honest read.</b> At $135 with a blended close near the live mark, the <i>close</i> is usually green — but the <i>intraday</i> ride can still dip below your entry early before settling higher, and a thin minority of paths close red. The model says "probably up, possibly bumpy," not "guaranteed." It cannot predict a specific halt, circuit-breaker, or news shock.
-    <br><br>
-    <b>Sources.</b> <a href="https://polymarket.com/event/spacex-ipo-closing-market-cap-above" target="_blank">Polymarket SpaceX IPO market-cap markets</a> and Hyperliquid <code>xyz:SPCX</code> synthetic pre-IPO perp. Open-to-close behavior: public mega-IPO first-day price histories.
+    <b>Sources.</b> <a href="https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm" target="_blank" rel="noopener">Anthropic, PBC Form S-1 (filed Oct 26 2026)</a> · Polymarket Anthropic IPO markets (closing market cap, IPO valuation, IPO date, raise) · Hyperliquid <code>xyz:ANT</code> and <code>xyz:SPCX</code> perps · Social Capital risk-factor charts · value-chain chart (third-party estimates as labeled).
   </div>
   <div class="disc">
-    <b>Not financial advice.</b> The June 11 2026 date and $135 price are inputs you supplied and are <b>not independently verified here</b> — no S-1 in my data, and Polymarket still resolves "No" if no IPO occurs by Dec 31 2027. The Hyperliquid <code>xyz:SPCX</code> perp is a synthetic proxy with basis risk (note the May 28 flash-crash). A $2T-scale listing may behave nothing like the historical comparables, and intraday IPO volatility can be extreme (halts, gaps). Confirm terms with Fidelity. A $100,000 position can move thousands of dollars in minutes. Size to what you can afford to lose.
-    <br><br>
-    <b>About the Execution Plan.</b> Fills are detected continuously (hourly nodes plus Brownian-bridge interval extremes) and assume limit orders fill at the rung price, the core sells at the opening print, and stops fill <i>at the stop price</i> — real fills can <b>gap through a stop</b> in a fast move or halt, so the "hold more" scenarios carry more downside than the model shows. The residual chance of a sub-$135 sale is largely irreducible: it is roughly the model's probability that SPCX is below your $135 basis at the open or the close, which a must-be-flat-by-close plan cannot avoid. Per this model the highest-expected-value Day-1 move is simply to sell into the open; the laddered scenarios trade a small expected haircut for upside participation plus a defined floor. The 20-day hold heatmap (Case C) ships with a recommended planning overlay <b>on</b> by default — a light historical drift (20/100), a Polymarket anchor (40/100), and an index-inclusion event overlay (50/100) that injects the Mertz/Grok forced-buy impulses on the Jun 18–22 and Jul 7 catalyst dates. These are planning aids, not forecasts; set every overlay slider to 0 for a pure martingale. The "$270 Grok zone" readout is the model pricing that thesis, not endorsing it — even with the overlay on, the share of paths that reach the headline target is the model's honest verdict on the bull case. Order types, the on-close (MOC/LOC) cutoff, and stop behavior on a first-day IPO must be confirmed in your own Fidelity account; <b>selling within 15 calendar days is a flip</b> (6-month IPO-access block, first offense).
+    <b>Not financial advice.</b> The initial S-1 leaves the price range, share count, tranche percentages and listing date blank; every one of those is an input here, not a fact. Polymarket and the <code>xyz:ANT</code> perp are proxies: the perp is synthetic with basis risk, and its share basis is not published — the FD-share input sets how its mark compares with the market-cap odds. The lock-up tranche sizes, earnings dates and fundamental scenarios are my assumptions, labeled as such; the SPCX overlay is one real path, not a forecast. Stops are modeled as filling at the stop price; real first-day fills can gap through. Tax figures are simplified (a loss is credited at the same rate) — check them against your own situation. Confirm order types, the MOC cutoff and the flip rule in your own Fidelity account.
   </div>
 </div>
 
 <script type="module">
-import { mulberry32, parsePolymarketCurve, curveArrays, parseHyperliquid,
-         realizedVolFromCandles, medianCapT, disagreement, simulateDayOne,
-         evaluatePolicy, sellAllAt, conditionalRecovery, buildScenario, SCENARIO_NAMES,
-         ticketsFromPolicy, simulatePostIPO, postIpoBands, netDollars, fmtNet,
-         simulateBottomFeed, bottomFeedTicket, normalizeTimingCurve,
-         SPCX_EVENT_DRIFT, peakReachProb } from './model.js';
+import { mulberry32, curveArrays, parseHyperliquid, realizedVolFromCandles, medianCapT, disagreement,
+  simulateDayOne, evaluatePolicy, sellAllAt, conditionalRecovery, buildScenario, SCENARIO_NAMES,
+  ticketsFromPolicy, netDollars, fmtNet, simulateBottomFeed, bottomFeedTicket,
+  parseBucketCurve, parseDateEvent, buildTradingCalendar, calIndex, fidelityFirstSellable, ltcgFirstDay,
+  antUnlockEvents, earningsSessions, supplyDriftCurve, simulateYear, scenarioPerShare,
+  ANT_SCENARIOS_DEFAULT, afterTax } from './model.js';
 import { BAKED_SNAPSHOT } from './snapshot.js';
 
-// Day-1 IPO price discovery runs far hotter than the oracle-tracked perp's realized vol;
-// the perp number is treated as a floor and scaled up by this multiplier.
+const TICKER = 'ANT';
 const IPO_DAY_VOL_MULT = 2;
 const sliderFromSession = (sig) => Math.max(0, Math.min(100, Math.round((sig - 0.02) / 0.18 * 100)));
-// The model always consumes the timing-normalized curve (raw Polymarket prices are
-// P(IPO)·P(cap>X | IPO); see normalizeTimingCurve).
-const theCurve = () => normalizeTimingCurve(live.curve);
 
-// Live data store — starts as the baked snapshot, replaced by fetchLive() in Task 10.
 const live = {
-  hl: BAKED_SNAPSHOT.hl,
-  curve: BAKED_SNAPSHOT.curve,
-  vol: BAKED_SNAPSHOT.vol,
-  asOf: BAKED_SNAPSHOT.asOf,
-  status: 'snapshot'   // 'live' | 'snapshot' | 'partial'
+  hl: BAKED_SNAPSHOT.hl, curve: BAKED_SNAPSHOT.curve, valCurve: BAKED_SNAPSHOT.valCurve,
+  raiseCurve: BAKED_SNAPSHOT.raiseCurve, date: BAKED_SNAPSHOT.date, vol: BAKED_SNAPSHOT.vol,
+  asOf: BAKED_SNAPSHOT.asOf, status: 'snapshot',
 };
+const SPCX = BAKED_SNAPSHOT.spcx;
 
-const state = { pos:100000, offer:135, shares:12.96e9, w:0.5,
-                vol:sliderFromSession(BAKED_SNAPSHOT.vol.sessionSigma * IPO_DAY_VOL_MULT), N:10000, steps:8,
-                scenario:'balanced', risk:50, openPx:null }; // openPx: actual IPO opening print; null = use the model's expected open
-let SEED = 20260611;
+const state = { pos: 100000, offerManual: null, shares: 17.4e9, w: 0.5,
+  vol: sliderFromSession(BAKED_SNAPSHOT.vol.sessionSigma * IPO_DAY_VOL_MULT), N: 10000, steps: 8,
+  scenario: 'balanced', risk: 50, openPx: null, ipoIso: '2026-11-20',
+  scenarios: ANT_SCENARIOS_DEFAULT.map(s => ({ ...s })), netCashB: 180 };
+let SEED = 20261120;
 let rng = mulberry32(SEED);
-function reseed(){ rng = mulberry32(SEED); }
+const reseed = () => { rng = mulberry32(SEED); };
+const STEP_LABELS = ['Open', '+1h', '+2h', '+3h', '+4h', '+5h', '+6h', '+7h', 'Close'];
 
-const STEP_LABELS=['Open','+1h','+2h','+3h','+4h','+5h','+6h','+7h','Close'];
-
-// NYSE trading-day calendar from the IPO. Day 0 = IPO / Day-1 close (Fri Jun 12 2026).
-// Weekends + NYSE holidays in-window are skipped (Juneteenth Fri Jun 19, Independence Day
-// observed Fri Jul 3), so the day index maps to real catalyst sessions — Fidelity's
-// 15-CALENDAR-day flip window ends over the Jun 27–28 weekend, so the first penalty-free
-// sale (Mon Jun 29) lands on Day 10; Nasdaq-100 inclusion (Jul 7) on Day 15; the 1-month
-// assessment point (~Jul 9) on Day 17.
-const MON_=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const DOW_=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-const NYSE_HOLIDAYS=new Set(['2026-06-19','2026-07-03']);
-const isoOf=dt=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
-function buildTradingDays(y,m,d,n){
-  const out=[],dt=new Date(y,m,d);
-  while(out.length<=n){
-    const dow=dt.getDay(),iso=isoOf(dt);
-    if(dow!==0&&dow!==6&&!NYSE_HOLIDAYS.has(iso))
-      out.push({i:out.length,iso,label:`${DOW_[dow]} ${MON_[dt.getMonth()]} ${dt.getDate()}`,short:`${MON_[dt.getMonth()]} ${dt.getDate()}`});
-    dt.setDate(dt.getDate()+1);
-  }
-  return out;
+// ---- calendar (rebuilt when the IPO date changes) ----
+let CAL, HORIZON, FLIP_IDX, LTCG_IDX, UNLOCKS, EARN, SUPPLY_BASE;
+function buildCalendar() {
+  CAL = buildTradingCalendar(state.ipoIso, 275);
+  state.ipoIso = CAL[0].iso;
+  LTCG_IDX = calIndex(CAL, ltcgFirstDay(state.ipoIso));
+  HORIZON = LTCG_IDX;
+  FLIP_IDX = calIndex(CAL, fidelityFirstSellable(state.ipoIso));
+  UNLOCKS = antUnlockEvents(state.ipoIso).map(e => ({ ...e, idx: calIndex(CAL, e.iso) })).filter(e => e.idx >= 0 && e.idx <= HORIZON);
+  EARN = earningsSessions().map(e => ({ ...e, idx: calIndex(CAL, e.iso) })).filter(e => e.idx > 0 && e.idx <= HORIZON);
+  SUPPLY_BASE = supplyDriftCurve(UNLOCKS, HORIZON, { kappa: 1.0, rho: 0.5 });
+  const ex = document.getElementById('exitDay'); ex.max = HORIZON;
+  if (+ex.value > HORIZON || !ex.dataset.touched) ex.value = HORIZON;
 }
-const TDAYS=buildTradingDays(2026,5,12,20);             // indices 0..20
-const NASDAQ_IDX=TDAYS.findIndex(d=>d.iso==='2026-07-07'); // Day 15
-const LOCK_END_IDX=TDAYS.findIndex(d=>d.iso==='2026-06-29'); // Day 10 — first penalty-free sale (15-calendar-day flip window ends Jun 27–28 weekend)
-const dayLabel=i=>TDAYS[i]?TDAYS[i].label:('Day '+i);
 
-function pctile(arr,p){const s=[...arr].sort((a,b)=>a-b);const idx=(s.length-1)*p;const lo=Math.floor(idx),hi=Math.ceil(idx);return s[lo]+(s[hi]-s[lo])*(idx-lo);}
-function mean(a){return a.reduce((x,y)=>x+y,0)/a.length;}
-function fracBelow(a,x){return a.filter(v=>v<x).length/a.length;}
-function fracAbove(a,x){return a.filter(v=>v>x).length/a.length;}
-function fmtPct(x){return (x>=0?'+':'')+(x*100).toFixed(1)+'%';}
-function fmtUsd(x){return (x<0?'-$':'$')+Math.abs(Math.round(x)).toLocaleString();}
-function cls(x){return x>0.001?'pos':x<-0.001?'neg':'neu';}
-function setText(id,t){document.getElementById(id).textContent=t;}
+const theCurve = () => live.curve;                 // bucket curves are already conditional on an IPO
+const polyOfferPerShare = () => { const { thresh, above } = curveArrays(live.valCurve); return medianCapT(thresh, above) * 1e12 / state.shares; };
+const offer = () => state.offerManual ?? +polyOfferPerShare().toFixed(2);
+const taxRate = (long) => document.getElementById('acct').value === 'roth' ? 0 : (+document.getElementById(long ? 'ltRate' : 'stRate').value || 0) / 100;
 
-let closeChart,rangeChart,survChart,touchChart,fan20Chart;
-let lastSim = null;   // most recent Day-1 simulation — partial re-renders reuse it
-const scoreData = { A:null, B:null, C:null };
+function pctile(arr, p) { const s = Float64Array.from(arr).sort(); const i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); }
+function mean(a) { let s = 0; for (const x of a) s += x; return s / a.length; }
+function fracBelow(a, x) { let c = 0; for (const v of a) if (v < x) c++; return c / a.length; }
+function fracAbove(a, x) { let c = 0; for (const v of a) if (v > x) c++; return c / a.length; }
+const fmtPct = (x) => (x >= 0 ? '+' : '') + (x * 100).toFixed(1) + '%';
+const fmtUsd = (x) => (x < 0 ? '-$' : '$') + Math.abs(Math.round(x)).toLocaleString();
+const fmtMoney = (x) => '$' + Math.round(x).toLocaleString();
+const fmtPx = (x) => '$' + x.toFixed(x < 100 ? 2 : 1);
+const cls = (x) => x > 0.001 ? 'pos' : x < -0.001 ? 'neg' : 'neu';
+const setText = (id, t) => { document.getElementById(id).textContent = t; };
+function el(tag, props = {}, ...kids) { const e = document.createElement(tag); Object.assign(e, props); for (const k of kids) e.append(k); return e; }
+const txt = (s) => document.createTextNode(s);
+const bold = (t, color) => { const e = el('b', { textContent: t }); if (color) e.style.color = color; return e; };
+const dateYY = (i) => `${CAL[i].label} '${CAL[i].iso.slice(2, 4)}`;
+function metricCards(host, cards) {
+  host.textContent = '';
+  for (const m of cards) host.append(el('div', { className: 'metric' },
+    el('div', { className: 'k', textContent: m.k }), el('div', { className: 'v ' + (m.c || ''), textContent: m.v }),
+    el('div', { className: 's', textContent: m.s || '' })));
+}
 
-function debounce(fn, ms=120){ let t; return ()=>{ clearTimeout(t); t=setTimeout(fn, ms); }; }
-// Partial re-renders: only the sections downstream of the touched control re-compute.
-// Model inputs (pos/offer/weight/shares/vol) need the full pipeline; execution-plan,
-// bottom-feeder, and 20-day controls reuse lastSim instead of re-simulating 10k paths.
+let closeChart, rangeChart, survChart, touchChart, qChart;
+let lastSim = null, lastYear = null;
+const scoreData = { A: null, B: null, C: null };
+function debounce(fn, ms = 120) { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; }
 const rerender = {
-  full: debounce(render),
-  plan: debounce(()=>{ if(!lastSim) return; renderExecutionPlan(lastSim); renderScorecard(); }),
-  bf:   debounce(()=>{ if(!lastSim) return; renderBottomFeed(lastSim); renderScorecard(); }),
-  c20:  debounce(()=>{ if(!lastSim) return; render20Day(lastSim, lastSim.entry); renderScorecard(); }),
+  full: debounce(() => render()),
+  plan: debounce(() => { if (!lastSim) return; renderExecutionPlan(lastSim); renderScorecard(); }),
+  bf: debounce(() => { if (!lastSim) return; renderBottomFeed(lastSim); renderScorecard(); }),
+  year: debounce(() => { if (!lastSim) return; renderYear(lastSim); renderScorecard(); }),
+  yearView: debounce(() => { if (!lastYear) return; renderYearView(); renderScorecard(); }, 40),
 };
-const GRID='#1a2336',TICK='#8b97ad',PUR='#7c5cff',BLUE='#4da3ff';
-const baseOpts=(e={})=>Object.assign({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-  scales:{x:{grid:{color:GRID},ticks:{color:TICK}},y:{grid:{color:GRID},ticks:{color:TICK}}}},e);
+const GRID = '#211f26', TICK = '#a39b94', ACC = '#d97757';
+const baseOpts = (e = {}) => Object.assign({ responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+  scales: { x: { grid: { color: GRID }, ticks: { color: TICK } }, y: { grid: { color: GRID }, ticks: { color: TICK } } } }, e);
 
-function render(){
+function render() {
   reseed();
+  const entry = offer();
   const { thresh, above } = curveArrays(theCurve());
-  const sim = simulateDayOne({ thresh, above, shares: state.shares, hlMark: live.hl.mark,
-                               w: state.w, offer: state.offer, vol: state.vol, N: state.N, steps: state.steps, rng });
+  const sim = simulateDayOne({ thresh, above, shares: state.shares, hlMark: live.hl.mark, w: state.w,
+    offer: entry, vol: state.vol, N: state.N, steps: state.steps, rng });
   lastSim = sim;
-  const { closes, lows, highs, grid, entry } = sim;
-  const polyMedPerShare = sim.polyMedPerShare;
-  const dis = disagreement(live.hl.mark, polyMedPerShare);
-
+  const { closes, lows, highs, grid } = sim;
+  const dis = disagreement(live.hl.mark, sim.polyMedPerShare);
   const pProfit = fracAbove(closes, entry);
-  const meanC = mean(closes), evRet = meanC/entry - 1, evDol = state.pos*evRet;
+  const meanC = mean(closes), evRet = meanC / entry - 1, evDol = state.pos * evRet;
   const pUnder = fracBelow(lows, entry);
-  const medLow = pctile(lows,.5)/entry - 1, medHigh = pctile(highs,.5)/entry - 1;
-  const shares = state.pos/entry;
+  const medLow = pctile(lows, .5) / entry - 1, medHigh = pctile(highs, .5) / entry - 1;
+  const shares = state.pos / entry;
 
-  setText('ppPill', (pProfit*100).toFixed(0)+'%');
-  setText('derived',
-    `Blended close ≈ $${sim.center.toFixed(0)} · Hyperliquid $${live.hl.mark.toFixed(2)} ⇄ Polymarket-implied $${polyMedPerShare.toFixed(0)} · you hold ≈ ${Math.round(shares).toLocaleString()} sh`);
-
+  setText('offerLbl', state.offerManual ? '$' + entry : 'live $' + entry.toFixed(2));
+  setText('ppPill', (pProfit * 100).toFixed(0) + '%');
+  setText('derived', `Allocation ${fmtPx(entry)} (${(entry * state.shares / 1e12).toFixed(2)}T FD) · blended Day-1 close ≈ ${fmtPx(sim.center)} · HL ${fmtPx(live.hl.mark)} ⇄ Polymarket ${fmtPx(sim.polyMedPerShare)} · Series H was $58.90/sh · you hold ≈ ${Math.round(shares).toLocaleString()} sh`);
   updateLiveStrip(dis);
 
-  // metric cards (v1 verbatim — consume closes/lows/highs/entry)
-  const M=document.getElementById('metrics');M.textContent='';
-  [{k:'Chance of a green close',v:(pProfit*100).toFixed(0)+'%',c:pProfit>=.5?'pos':'neg',s:'close above $'+entry},
-   {k:'Expected close',v:'$'+meanC.toFixed(0),c:cls(evRet),s:`${fmtPct(evRet)} · ${fmtUsd(evDol)} P&L`},
-   {k:'Dips below entry intraday',v:(pUnder*100).toFixed(0)+'%',c:pUnder>0.4?'neg':'neu',s:`median low ${fmtPct(medLow)}`},
-   {k:'Median intraday high',v:fmtPct(medHigh),c:'pos',s:`peak paper gain ${fmtUsd(state.pos*medHigh)}`}
-  ].forEach(m=>{const d=document.createElement('div');d.className='metric';
-    const k=document.createElement('div');k.className='k';k.textContent=m.k;
-    const v=document.createElement('div');v.className='v '+m.c;v.textContent=m.v;
-    const s=document.createElement('div');s.className='s';s.textContent=m.s;
-    d.append(k,v,s);M.appendChild(d);});
+  metricCards(document.getElementById('metrics'), [
+    { k: 'Chance of a green close', v: (pProfit * 100).toFixed(0) + '%', c: pProfit >= .5 ? 'pos' : 'neg', s: 'Day-1 close above ' + fmtPx(entry) },
+    { k: 'Expected Day-1 close', v: fmtPx(meanC), c: cls(evRet), s: `${fmtPct(evRet)} · ${fmtUsd(evDol)} on ${fmtMoney(state.pos)}` },
+    { k: 'Dips below offer intraday', v: (pUnder * 100).toFixed(0) + '%', c: pUnder > 0.4 ? 'neg' : 'neu', s: `median low ${fmtPct(medLow)}` },
+    { k: 'Median intraday high', v: fmtPct(medHigh), c: 'pos', s: `peak paper gain ${fmtUsd(state.pos * medHigh)}` },
+  ]);
 
-  // verdict (v1 verbatim — consumes closes/lows/highs/entry)
-  const v=document.getElementById('verdict');v.textContent='';
-  const b=(t,c)=>{const e=document.createElement('b');e.textContent=t;if(c)e.style.color=c;return e;};
-  const p10c=pctile(closes,.1), p90c=pctile(closes,.9);
-  v.append(
-    document.createTextNode('Holding your $135 allocation through Day 1: the close is '),
-    b((pProfit*100).toFixed(0)+'% likely to be green',pProfit>=.7?'#28d17c':'#ffb648'),
-    document.createTextNode(`, with an expected close around $${meanC.toFixed(0)} (`),
-    b(fmtPct(evRet),cls(evRet)),document.createTextNode(`, `),b(fmtUsd(evDol),cls(evRet)),
-    document.createTextNode(` on $${state.pos.toLocaleString()}). The middle-80% of closes lands roughly $${p10c.toFixed(0)}–$${p90c.toFixed(0)}.`),
-    document.createElement('br'),document.createElement('br'),
-    document.createTextNode(`Intraday, expect a swing: a typical path touches a low near ${fmtPct(medLow)} and a high near ${fmtPct(medHigh)} versus your entry, and there's a `),
-    b((pUnder*100).toFixed(0)+'% chance it dips below $135 at some point',pUnder>0.4?'#ff5c6c':'#ffb648'),
-    document.createTextNode(' during the day before the close. Translation: the odds favor closing up, but the ride can be choppy — decide in advance whether you sell into intraday strength or hold for the close, and don\'t let an early dip shake a position the model says usually recovers.')
-  );
+  const v = document.getElementById('verdict'); v.textContent = '';
+  const p10c = pctile(closes, .1), p90c = pctile(closes, .9);
+  v.append(txt(`Day 1 on a ${fmtPx(entry)} allocation: the close is `),
+    bold((pProfit * 100).toFixed(0) + '% likely to be green', pProfit >= .7 ? '#3ccf8e' : '#ffb648'),
+    txt(`, expected near ${fmtPx(meanC)} (`), bold(fmtPct(evRet)), txt(', '), bold(fmtUsd(evDol)),
+    txt(` on ${fmtMoney(state.pos)}); middle-80% of closes ${fmtPx(p10c)}–${fmtPx(p90c)}. The crowd prices a modest pop — far smaller than SPCX's +23% — because a ~$1.7T valuation with a ~$100B raise leaves little room between the offer and where the perp already trades. `),
+    el('br'), el('br'),
+    txt('The bigger risk is not Day 1, it is the first two months: SPCX closed Day 1 at $166.72 on a $135 offer and was '),
+    bold('35% lower by session 33', '#ff6b6b'),
+    txt(' as its first unlock approached. Case C below runs ANT through its own unlock calendar.'));
 
-  drawHeatmap(grid,entry);
-  drawTouch(lows,highs,entry);
-  drawClose(closes,entry);
-  drawRange(lows,highs,entry);
-  drawSurv(thresh,above);
+  drawHeatmap(grid, entry); drawTouch(lows, highs, entry); drawClose(closes, entry); drawRange(lows, highs, entry);
+  drawSurv();
   renderExecutionPlan(sim);
   renderBottomFeed(sim);
+  renderYear(sim);
   renderScorecard();
 }
 
-function fmtMoney(x){ return '$'+Math.round(x).toLocaleString(); }
-function el(tag, props={}, ...kids){ const e=document.createElement(tag); Object.assign(e, props); for (const k of kids) e.append(k); return e; }
-function txt(s){ return document.createTextNode(s); }
-
-function render20Day(sim, entry){
-  const dailySigma = 0.02 + 0.18 * (state.vol / 100);            // same per-session sigma the Day-1 model uses
-  const { thresh, above } = curveArrays(theCurve());
-  const driftWeight = (+document.getElementById('driftW').value) / 100;
-  const anchorStrength = (+document.getElementById('anchorS').value) / 100;
-  const eventWeight = (+document.getElementById('eventW').value) / 100;
-  const exitDay = +document.getElementById('exitDay').value;
-  document.getElementById('driftWLbl').textContent = Math.round(driftWeight*100);
-  document.getElementById('anchorSLbl').textContent = Math.round(anchorStrength*100);
-  document.getElementById('eventWLbl').textContent = Math.round(eventWeight*100);
-  document.getElementById('exitDayLbl').textContent = `${exitDay} · ${TDAYS[exitDay] ? TDAYS[exitDay].short : ''}`;
-
-  // capU rank-couples each path's terminal anchor to its own Day-1 close percentile
-  const pip = simulatePostIPO({ closes: sim.closes, dailySigma, rng: mulberry32(SEED + 20), days: 20,
-    driftWeight, polyTerminal: { thresh, above, shares: state.shares, us: sim.capU }, anchorStrength,
-    eventCurve: SPCX_EVENT_DRIFT, eventWeight });
-  const bands = postIpoBands(pip.grid, entry);
-
-  drawDayHeat(pip.grid, entry, exitDay, NASDAQ_IDX, LOCK_END_IDX);
-
-  const cShares = state.pos / entry;                              // shares the allocation buys at the entry price
-  const b = bands[exitDay];
-  const exitCol = pip.grid[exitDay], nCol = exitCol.length;
-  const meanColC = exitCol.reduce((a,c)=>a+c,0) / nCol;
-  const varColC = exitCol.reduce((a,c)=>a+(c-meanColC)*(c-meanColC),0) / Math.max(1, nCol-1);
-  scoreData.C = { exitDay, mean: netDollars(cShares*meanColC, state.pos), median: netDollars(cShares*b.median, state.pos),
-    p5: netDollars(cShares*b.p5, state.pos), p95: netDollars(cShares*b.p95, state.pos), pLoss: b.pBelow,
-    se: cShares * Math.sqrt(varColC / nCol),
-    sig: `Underwater @ ${TDAYS[exitDay] ? TDAYS[exitDay].short : 'day '+exitDay}: ${(b.pBelow*100).toFixed(0)}%` };
-
-  // Grok thesis test: how often does our model reach the $275–300 zone by the Jul 7 catalyst?
-  const reach = peakReachProb(pip.grid, 270, NASDAQ_IDX);
-
-  const out = document.getElementById('fan20Out'); out.textContent='';
-  out.append(
-    el('b', { textContent: `Case C — hold to ${dayLabel(exitDay)} (day ${exitDay}): ` }),
-    txt('median '),
-    el('b', { textContent: fmtNet(netDollars(cShares * b.median, state.pos)), style:'color:'+(b.median>=entry?'#28d17c':'#ff5c6c') }),
-    txt(` on ${fmtMoney(state.pos)} (middle-90% ${fmtNet(netDollars(cShares*b.p5, state.pos))} to ${fmtNet(netDollars(cShares*b.p95, state.pos))}). `),
-    el('b', { textContent: (b.pBelow*100).toFixed(0)+'% underwater', style:'color:'+(b.pBelow>0.33?'#ff5c6c':'#ffb648') }),
-    txt(` (below your $${entry} basis). `),
-    el('br'), el('br'),
-    el('b', { textContent: `Grok's $270+ zone by Jul 7: ` }),
-    el('b', { textContent: (reach.everPct*100).toFixed(0)+'% of paths ever reach it', style:'color:'+(reach.everPct>0.25?'#28d17c':'#ffb648') }),
-    txt(` (daily-close basis), `),
-    el('b', { textContent: (reach.atPct*100).toFixed(0)+'% still ≥ $270 at the Jul 7 close', style:'color:'+(reach.atPct>0.2?'#28d17c':'#ff5c6c') }),
-    txt('. '),
-    el('span', { className:'hint', textContent: eventWeight>0
-      ? `That is WITH the index-inclusion overlay at ${Math.round(eventWeight*100)}/100 turned on — your model still puts ${(reach.everPct*100).toFixed(0)}% on the headline target, the market's own verdict on the bull case.`
-      : `Overlay off — pure martingale + Polymarket anchor.` }));
-}
-
-function renderExecutionPlan(sim){
-  const entry = sim.entry;
-  const shares = Math.round(state.pos / entry);
+// ---------------- Case A ----------------
+function renderExecutionPlan(sim) {
+  const entry = sim.entry, shares = Math.round(state.pos / entry);
   const paths = { grid: sim.grid, gridMin: sim.gridMin, gridMax: sim.gridMax, entry };
-  // reference opening price: the model's expected (median) open, or the user's override
   const modelOpen = pctile(sim.grid[0], 0.5);
   const refPx = (state.openPx && state.openPx > 0) ? state.openPx : modelOpen;
-  setText('openPxLbl', state.openPx && state.openPx > 0 ? '$'+state.openPx : 'model $'+modelOpen.toFixed(0));
-  const ctx = { entry, shares, refPx };
-
-  // scenario buttons (build once)
+  setText('openPxLbl', state.openPx ? '$' + state.openPx : 'model ' + fmtPx(modelOpen));
   const bw = document.getElementById('scenBtns');
-  if (!bw.dataset.built){
-    const labels = { protect:'Protect First', balanced:'Balanced', ride:'Ride the Upside' };
-    SCENARIO_NAMES.forEach(n=>{
-      const b = el('button', { className:'btn', textContent:labels[n] });
-      b.dataset.scen = n;
-      b.addEventListener('click', ()=>{ state.scenario=n; rerender.plan(); });
-      bw.appendChild(b);
-    });
+  if (!bw.dataset.built) {
+    const labels = { protect: 'Protect First', balanced: 'Balanced', ride: 'Ride the Upside' };
+    SCENARIO_NAMES.forEach(n => { const b = el('button', { className: 'btn', textContent: labels[n] }); b.dataset.scen = n;
+      b.addEventListener('click', () => { state.scenario = n; rerender.plan(); }); bw.appendChild(b); });
     bw.dataset.built = '1';
   }
-  [...bw.children].forEach(b=> b.style.outline = (b.dataset.scen===state.scenario) ? '2px solid #b58bff' : 'none');
-
-  // score the chosen scenario + the two baselines
-  const policy = buildScenario(state.scenario, state.risk, ctx);
+  [...bw.children].forEach(b => b.style.outline = (b.dataset.scen === state.scenario) ? '2px solid #f0b49b' : 'none');
+  const policy = buildScenario(state.scenario, state.risk, { entry, shares, refPx });
   const r = evaluatePolicy(paths, policy);
-  const atOpen = sellAllAt(paths, 0, shares);
-  const toClose = sellAllAt(paths, state.steps, shares);
+  const atOpen = sellAllAt(paths, 0, shares), toClose = sellAllAt(paths, state.steps, shares);
   const basis = shares * entry;
-
-  // honest model read + conditional-recovery sentence, anchored to the opening reference
   const rec = conditionalRecovery(sim.grid, refPx, [1]);
-  const rn = document.getElementById('recoveryNote'); rn.textContent='';
-  rn.append(
-    el('b', { textContent: 'Model read: ' }),
-    txt(`SPCX is expected to open near $${refPx.toFixed(0)} — far above your $${entry} basis. In this model the single highest-expected-value move is to sell into the open; the laddered plans below trade a small expected haircut for upside if it keeps climbing, plus a stop that locks in most of the gain. Counter-intuitively, the more protective postures can show a slightly higher chance of a net loss — selling a larger core into the rare sub-$${entry} open locks that loss in, while holding more lets it recover by the close. Their real edge is a higher stop floor and lower variance, not a lower loss probability. `));
-  if (rec[0] && rec[0].p != null){
-    rn.append(
-      txt(`When it pulls back below the opening reference early, it still closes back above it `),
-      el('b', { textContent: (rec[0].p*100).toFixed(0)+'% of the time' }),
-      txt(` — which is why protection starts loose and tightens into the close.`));
-  }
-
-  // metric cards
-  const cards = [
-    {k:'Expected net P&L', v:fmtNet(netDollars(r.Eproceeds, basis)), c:r.Eproceeds>=basis?'pos':'neg', s:`${fmtPct(r.Eproceeds/basis-1)} on ~$${basis.toLocaleString()} deployed · avg $${r.avgSalePx.toFixed(2)}/sh`},
-    {k:'Middle-90% net P&L', v:`${fmtNet(netDollars(r.p5, basis))} to ${fmtNet(netDollars(r.p95, basis))}`, c:'neu', s:`median ${fmtNet(netDollars(r.medianProceeds, basis))}`},
-    {k:'Chance of a net loss', v:(r.pNetLoss*100).toFixed(0)+'%', c:r.pNetLoss>0.15?'neg':'pos', s:`proceeds below your $${basis.toLocaleString()} basis`},
-    {k:`Chance of a sub-$${entry} sale`, v:(r.pSubBasisSale*100).toFixed(0)+'%', c:r.pSubBasisSale>0.2?'neg':'neu', s:`≈ ${Math.round(r.eSharesSubBasis)} sh on average`},
-    {k:'Sell mix', v:`${(r.mix.openPct*100).toFixed(0)}% open`, c:'neu', s:`${(r.mix.upsidePct*100).toFixed(0)}% rungs · ${(r.mix.stopPct*100).toFixed(0)}% stop · ${(r.mix.closePct*100).toFixed(0)}% close`},
-    {k:'vs sell-all-at-open', v:fmtNet(r.Eproceeds-atOpen.Eproceeds), c:r.Eproceeds>=atOpen.Eproceeds?'pos':'neg', s:`open avg $${atOpen.avgSalePx.toFixed(2)} · hold-to-close net ${fmtNet(netDollars(toClose.Eproceeds, basis))}`},
-  ];
-  scoreData.A = { mean: netDollars(r.Eproceeds, basis), median: netDollars(r.medianProceeds, basis),
-    p5: netDollars(r.p5, basis), p95: netDollars(r.p95, basis), pLoss: r.pNetLoss,
-    se: r.seProceeds,
-    sig: `Sub-$${entry} sale ${(r.pSubBasisSale*100).toFixed(0)}%` };
-  const M = document.getElementById('execMetrics'); M.textContent='';
-  cards.forEach(m=> M.append(el('div', { className:'metric' },
-    el('div', { className:'k', textContent:m.k }),
-    el('div', { className:'v '+m.c, textContent:m.v }),
-    el('div', { className:'s', textContent:m.s }))));
-
-  // ticket table
-  const t = ticketsFromPolicy(policy);
-  const tt = document.getElementById('ticketTable'); tt.textContent='';
-  const headRow = el('tr', { style:'text-align:left;color:#9a8fc0' });
-  ['#','Order','Shares','Sell limit','Sell stop','TIF'].forEach(h=> headRow.append(el('th', { textContent:h })));
-  const tbody = el('tbody');
-  tbody.append(el('tr', { style:'border-top:1px solid #2a2150' },
-    el('td', { textContent:'C' }),
-    el('td', { textContent:t.coreAtOpen.type }),
-    el('td', { textContent:t.coreAtOpen.shares.toLocaleString() }),
-    el('td', { colSpan:3, textContent:t.coreAtOpen.note })));
-  t.ladder.forEach(L=> tbody.append(el('tr', { style:'border-top:1px solid #2a2150' },
-    el('td', { textContent:String(L.tranche) }),
-    el('td', { textContent:L.type }),
-    el('td', { textContent:L.shares.toLocaleString() }),
-    el('td', { textContent:'$'+L.limitPx }),
-    el('td', { textContent:L.stopPx!=null ? '$'+L.stopPx : '—' }),
-    el('td', { textContent:L.tif }))));
-  tbody.append(el('tr', { style:'border-top:1px solid #2a2150' },
-    el('td', { textContent:'R' }),
-    el('td', { textContent:t.residual.type }),
-    el('td', { textContent:t.residual.shares.toLocaleString() }),
-    el('td', { colSpan:3, textContent:t.residual.note })));
-  const table = el('table', { style:'width:100%;border-collapse:collapse;font-size:13px' },
-    el('thead', {}, headRow), tbody);
-  const tableNote = el('div', { className:'hint', style:'margin-top:6px' },
-    txt('Flat by '), el('b', { textContent:t.flatBy }),
-    txt('. Each numbered row is one OCO bracket in Active Trader Pro: the limit takes profit at the rung, the stop protects the same shares — whichever fills cancels the other.'));
-  tt.append(table, tableNote);
-
-  // checkpoints
-  const cl = document.getElementById('checkpointList'); cl.textContent='';
-  const ul = el('ul', { style:'margin:0;padding-left:18px' });
-  t.checkpoints.forEach(c=> ul.append(el('li', {}, el('b', { textContent:c.clock }), txt(' — '+c.action))));
-  ul.append(el('li', {}, el('b', { textContent:t.flatBy }), txt(' — confirm the position is fully closed.')));
+  const rn = document.getElementById('recoveryNote'); rn.textContent = '';
+  rn.append(bold('Model read: '), txt(`${TICKER} is expected to open near ${fmtPx(refPx)} vs. your ${fmtPx(entry)} allocation — a thinner cushion than SPCX had, so stops sit close to the basis. Selling into the open is again the highest-expected-value Day-1 move; the ladders trade a small haircut for upside plus a defined floor. `));
+  if (rec[0] && rec[0].p != null) rn.append(txt('When it slips below the opening reference in the first hour it closes back above it '), bold((rec[0].p < 0.5 ? 'only ' : '') + (rec[0].p * 100).toFixed(0) + '% of the time'),
+    txt(rec[0].p < 0.5 ? ' — an early dip usually keeps going, which is why the core sells at the open.' : ' — which is why protection starts loose and tightens into the close.'));
+  const st = taxRate(false);
+  metricCards(document.getElementById('execMetrics'), [
+    { k: 'Expected net P&L', v: fmtNet(netDollars(r.Eproceeds, basis)), c: r.Eproceeds >= basis ? 'pos' : 'neg', s: `${fmtPct(r.Eproceeds / basis - 1)} · avg ${fmtPx(r.avgSalePx)}/sh · after-tax ${fmtNet(afterTax(r.Eproceeds - basis, st))}` },
+    { k: 'Middle-90% net P&L', v: `${fmtNet(r.p5 - basis)} to ${fmtNet(r.p95 - basis)}`, c: 'neu', s: `median ${fmtNet(r.medianProceeds - basis)}` },
+    { k: 'Chance of a net loss', v: (r.pNetLoss * 100).toFixed(0) + '%', c: r.pNetLoss > 0.15 ? 'neg' : 'pos', s: 'proceeds below cost' },
+    { k: 'vs sell-all-at-open', v: fmtNet(r.Eproceeds - atOpen.Eproceeds), c: r.Eproceeds >= atOpen.Eproceeds ? 'pos' : 'neg', s: `hold-to-close ${fmtNet(toClose.Eproceeds - basis)} · mix ${(r.mix.openPct * 100).toFixed(0)}% open / ${(r.mix.upsidePct * 100).toFixed(0)}% rungs / ${(r.mix.stopPct * 100).toFixed(0)}% stop` },
+  ]);
+  scoreData.A = { mean: r.Eproceeds - basis, median: r.medianProceeds - basis, p5: r.p5 - basis, p95: r.p95 - basis,
+    pLoss: r.pNetLoss, se: r.seProceeds, tax: st, sig: `Sub-offer sale ${(r.pSubBasisSale * 100).toFixed(0)}% · Fidelity flip` };
+  const t = ticketsFromPolicy(policy, { ticker: TICKER });
+  const tt = document.getElementById('ticketTable'); tt.textContent = '';
+  const tb = el('tbody');
+  tb.append(el('tr', {}, el('td', { textContent: 'C' }), el('td', { textContent: t.coreAtOpen.type }), el('td', { className: 'r', textContent: t.coreAtOpen.shares.toLocaleString() }), el('td', { colSpan: 3, textContent: t.coreAtOpen.note })));
+  t.ladder.forEach(L => tb.append(el('tr', {}, el('td', { textContent: String(L.tranche) }), el('td', { textContent: L.type }),
+    el('td', { className: 'r', textContent: L.shares.toLocaleString() }), el('td', { className: 'r', textContent: '$' + L.limitPx }),
+    el('td', { className: 'r', textContent: L.stopPx != null ? '$' + L.stopPx : '—' }), el('td', { textContent: L.tif }))));
+  tb.append(el('tr', {}, el('td', { textContent: 'R' }), el('td', { textContent: t.residual.type }), el('td', { className: 'r', textContent: t.residual.shares.toLocaleString() }), el('td', { colSpan: 3, textContent: t.residual.note })));
+  const hr = el('tr'); ['#', 'Order', 'Shares', 'Sell limit', 'Sell stop', 'TIF'].forEach((h, i) => hr.append(el('th', { textContent: h, className: i >= 2 && i <= 4 ? 'r' : '' })));
+  tt.append(el('table', { className: 't' }, el('thead', {}, hr), tb),
+    el('div', { className: 'hint', style: 'margin-top:6px' }, txt('Flat by '), bold(t.flatBy), txt('. Each numbered row is one OCO bracket: the limit takes profit, the stop protects the same shares.')));
+  const cl = document.getElementById('checkpointList'); cl.textContent = '';
+  const ul = el('ul', { style: 'margin:0;padding-left:18px' });
+  t.checkpoints.forEach(c => ul.append(el('li', {}, bold(c.clock), txt(' — ' + c.action))));
   cl.append(ul);
-
-  render20Day(sim, entry);
 }
 
-function renderBottomFeed(sim){
-  // Shares the Day-1 grid (and its bridge extremes) with Case A: common random numbers,
-  // identical resolution — strategy differences in the scorecard aren't sampling noise.
-  const limitPx = Math.max(1, +document.getElementById('bfLimit').value || 135);
-  const targetPct = Math.max(0, (+document.getElementById('bfTarget').value || 0) / 100);
-  const stopPct = Math.max(0, (+document.getElementById('bfStop').value || 0) / 100);
-  setText('bfLimitLbl', '$' + limitPx);
-  setText('bfTargetLbl', (targetPct * 100).toFixed(0) + '%');
-  setText('bfStopLbl', (stopPct * 100).toFixed(0) + '%');
-
-  const r = simulateBottomFeed({ grid: sim.grid, gridMin: sim.gridMin, gridMax: sim.gridMax },
-    { limitPx, capital: state.pos, targetPct, stopPct });
+// ---------------- Case B ----------------
+function renderBottomFeed(sim) {
+  const entry = sim.entry;
+  const lim = +document.getElementById('bfLimit').value;
+  const limitPx = lim > 0 ? lim : entry;
+  const targetPct = (+document.getElementById('bfTarget').value || 0) / 100;
+  const stopPct = (+document.getElementById('bfStop').value || 0) / 100;
+  setText('bfLimitLbl', fmtPx(limitPx)); setText('bfTargetLbl', (targetPct * 100).toFixed(0) + '%'); setText('bfStopLbl', (stopPct * 100).toFixed(0) + '%');
+  const r = simulateBottomFeed({ grid: sim.grid, gridMin: sim.gridMin, gridMax: sim.gridMax }, { limitPx, capital: state.pos, targetPct, stopPct });
   scoreData.B = { mean: r.net.mean, median: r.net.median, p5: r.net.p5, p95: r.net.p95,
-    pLoss: r.nets.filter(x=>x<0).length / r.nets.length,
-    se: r.net.se,
-    sig: `Fills ${(r.pFill*100).toFixed(0)}% · no-fill ${(r.pNoFill*100).toFixed(0)}%` };
+    pLoss: r.nets.filter(x => x < 0).length / r.nets.length, se: r.net.se, tax: taxRate(false),
+    sig: `Fills ${(r.pFill * 100).toFixed(0)}% · no-fill ${(r.pNoFill * 100).toFixed(0)}%` };
   const pct = (x) => (x * 100).toFixed(0) + '%';
-
   const out = document.getElementById('bfOut'); out.textContent = '';
-  out.append(
-    el('b', { textContent: `Fill odds ${pct(r.pFill)}` }),
-    txt(` — the day trades down to your $${limitPx} limit; `),
-    el('b', { textContent: `${pct(r.pNoFill)} no-fill (keep ${fmtMoney(state.pos)}, $0)` }),
-    txt('. '), el('br'),
-    txt(`Strategy net on ${fmtMoney(state.pos)} across all outcomes ($0 on no-fill days): `),
-    el('b', { textContent: fmtNet(r.net.mean), style: 'color:' + (r.net.mean >= 0 ? '#28d17c' : '#ff5c6c') }),
-    txt(` mean · median ${fmtNet(r.net.median)} · middle-90% ${fmtNet(r.net.p5)} to ${fmtNet(r.net.p95)}.`),
-    el('br'),
-    txt(`Exit mix: target ${pct(r.mix.targetPct)} · stop ${pct(r.mix.stopPct)} · close ${pct(r.mix.closePct)} · no-fill ${pct(r.mix.noFillPct)}.`));
-
-  const t = bottomFeedTicket({ limitPx, capital: state.pos, targetPct, stopPct });
+  out.append(bold(`Fill odds ${pct(r.pFill)}`), txt(` at ${fmtPx(limitPx)}; `), bold(`${pct(r.pNoFill)} no-fill ($0)`), txt('. '), el('br'),
+    txt(`Net on ${fmtMoney(state.pos)} across all outcomes: `), bold(fmtNet(r.net.mean), r.net.mean >= 0 ? '#3ccf8e' : '#ff6b6b'),
+    txt(` mean · median ${fmtNet(r.net.median)} · middle-90% ${fmtNet(r.net.p5)} to ${fmtNet(r.net.p95)}. Exit mix: target ${pct(r.mix.targetPct)} · stop ${pct(r.mix.stopPct)} · close ${pct(r.mix.closePct)}.`));
+  const t = bottomFeedTicket({ limitPx, capital: state.pos, targetPct, stopPct, ticker: TICKER });
   const tt = document.getElementById('bfTicket'); tt.textContent = '';
-  const trow = (label, o) => el('div', { className: 'hint', style: 'margin:5px 0' },
-    el('b', { textContent: label + ' — ' + o.type + ': ' }), txt(o.note));
-  tt.append(trow('Entry', t.entry), trow('Bracket', t.bracket), trow('Residual', t.residual));
+  for (const [lab, o] of [['Entry', t.entry], ['Bracket', t.bracket], ['Residual', t.residual]])
+    tt.append(el('div', { className: 'hint', style: 'margin:5px 0' }, bold(lab + ' — ' + o.type + ': '), txt(o.note)));
 }
 
-function renderScorecard(){
+// ---------------- Case C: 1-year ----------------
+function renderYear(sim) {
+  const supplyW = (+document.getElementById('supply').value) / 50;          // 50 → kappa 1.0
+  const anchorStrength = (+document.getElementById('anchor').value) / 100;
+  const earnSig = (+document.getElementById('earn').value) / 100;
+  const lvol = (+document.getElementById('lvol').value) / 1000;
+  setText('supLbl', document.getElementById('supply').value); setText('ancLbl', document.getElementById('anchor').value);
+  setText('earnLbl', (earnSig * 100).toFixed(0) + '%'); setText('lvLbl', (lvol * 100).toFixed(1) + '%');
+  const scen = state.scenarios.map(s => ({ ...s, perShare: scenarioPerShare(s, state.netCashB, state.shares) }));
+  const sigma0 = 0.02 + 0.18 * (state.vol / 100);
+  lastYear = simulateYear({ closes: sim.closes, rng: mulberry32(SEED + 365), days: HORIZON, sigma0, sigmaLong: lvol,
+    supplyCurve: SUPPLY_BASE, supplyWeight: supplyW, earningsIdx: EARN.map(e => e.idx), earningsSigma: earnSig,
+    scenarios: scen, dispersion: 0.15, anchorStrength, anchorTau: 20 });
+  lastYear.med = lastYear.grid.map(c => pctile(c, .5));
+  renderScenTable(scen);
+  renderYearView();
+}
+
+function renderYearView() {
+  const Y = lastYear, entry = lastSim.entry;
+  const exitDay = Math.min(+document.getElementById('exitDay').value, HORIZON);
+  setText('exitLbl', `${exitDay} · ${CAL[exitDay].short} '${CAL[exitDay].iso.slice(2, 4)}`);
+  setText('acctLbl', document.getElementById('acct').value === 'roth' ? 'Roth IRA' : 'Taxable');
+  drawYearHeat(Y.grid, entry, exitDay);
+  const shares = state.pos / entry, col = Y.grid[exitDay], N = col.length;
+  const longTerm = exitDay >= LTCG_IDX, rate = taxRate(longTerm);
+  const med = pctile(col, .5), p5 = pctile(col, .05), p95 = pctile(col, .95), m = mean(col);
+  let v = 0; for (const x of col) v += (x - m) * (x - m);
+  const se = shares * Math.sqrt(v / Math.max(1, N - 1) / N);
+  const pUnder = fracBelow(col, entry);
+  let ever = 0;
+  const tro = new Float64Array(N);
+  for (let p = 0; p < N; p++) {
+    let mn = Infinity, at = 0, hit = false;
+    for (let d = 0; d <= exitDay; d++) { const x = Y.grid[d][p]; if (x < mn) { mn = x; at = d; } if (d > 0 && x < entry) hit = true; }
+    tro[p] = at; if (hit) ever++;
+  }
+  const troMed = Math.round(pctile(tro, .5));
+  scoreData.C = { exitDay, mean: shares * m - state.pos, median: shares * med - state.pos, p5: shares * p5 - state.pos,
+    p95: shares * p95 - state.pos, pLoss: pUnder, se, tax: rate,
+    sig: `Underwater @ exit ${(pUnder * 100).toFixed(0)}% · ${longTerm ? 'long-term' : 'short-term'}` };
+  const out = document.getElementById('yearOut'); out.textContent = '';
+  out.append(bold(`Hold to ${dateYY(exitDay)} (session ${exitDay}): `), txt('median '),
+    bold(fmtNet(shares * med - state.pos), med >= entry ? '#3ccf8e' : '#ff6b6b'),
+    txt(` on ${fmtMoney(state.pos)} (middle-90% ${fmtNet(shares * p5 - state.pos)} to ${fmtNet(shares * p95 - state.pos)}; mean ${fmtNet(shares * m - state.pos)}). `),
+    bold((pUnder * 100).toFixed(0) + '% underwater', pUnder > 0.33 ? '#ff6b6b' : '#ffb648'), txt(' at the exit; '),
+    bold((ever / N * 100).toFixed(0) + '%'), txt(` of paths close below ${fmtPx(entry)} at least once before it. The typical path bottoms around `),
+    bold(`${CAL[troMed].short} '${CAL[troMed].iso.slice(2, 4)} (session ${troMed})`), txt('. '), el('br'), el('br'),
+    txt(`After tax (${document.getElementById('acct').value === 'roth' ? 'Roth: none' : (longTerm ? 'long-term ' : 'short-term ') + (rate * 100).toFixed(1) + '%'}): median `),
+    bold(fmtNet(afterTax(shares * med - state.pos, rate))), txt('. '),
+    el('span', { className: 'hint', textContent: longTerm ? 'Exit is past the 1-year mark: long-term rates apply.' : `Long-term treatment starts ${dateYY(LTCG_IDX)} (session ${LTCG_IDX}).` }));
+  renderKeyDates(entry, shares);
+}
+
+function renderScenTable(scen) {
+  const t = document.getElementById('scenTable'); t.textContent = '';
+  const hr = el('tr'); ['Scenario', 'Prob %', 'Run-rate $B', 'EV / run-rate', '$/share', 'vs offer'].forEach((h, i) => hr.append(el('th', { textContent: h, className: i ? 'r' : '' })));
+  t.append(el('thead', {}, hr));
+  const tb = el('tbody'); const entry = lastSim.entry;
+  scen.forEach((s, i) => {
+    const inp = (key, step) => { const x = el('input', { type: 'number', value: key === 'p' ? Math.round(s.p * 100) : s[key], step });
+      x.addEventListener('change', () => { const v = +x.value; if (!(v >= 0)) return; state.scenarios[i][key] = key === 'p' ? v / 100 : v; rerender.year(); }); return x; };
+    tb.append(el('tr', {}, el('td', { textContent: s.name }), el('td', { className: 'r' }, inp('p', 5)), el('td', { className: 'r' }, inp('runRateB', 10)),
+      el('td', { className: 'r' }, inp('multiple', 0.5)), el('td', { className: 'r', textContent: fmtPx(s.perShare) }),
+      el('td', { className: 'r ' + cls(s.perShare / entry - 1), textContent: fmtPct(s.perShare / entry - 1) })));
+  });
+  const ev = scen.reduce((a, s) => a + s.p * s.perShare, 0) / scen.reduce((a, s) => a + s.p, 0);
+  tb.append(el('tr', {}, el('td', { textContent: 'Weighted' }), el('td', {}), el('td', {}), el('td', {}),
+    el('td', { className: 'r', textContent: fmtPx(ev) }), el('td', { className: 'r ' + cls(ev / entry - 1), textContent: fmtPct(ev / entry - 1) })));
+  t.append(tb);
+  setText('cashLbl', state.netCashB);
+}
+
+function renderKeyDates(entry, shares) {
+  const Y = lastYear, t = document.getElementById('keyDates'); t.textContent = '';
+  const big = UNLOCKS.filter(e => e.fracFD >= 0.04 && e.idx > 0);
+  const rows = [{ idx: 0, what: 'Day-1 close' }, { idx: FLIP_IDX, what: 'Fidelity flip window ends (first penalty-free sale)' },
+    ...big.map(e => ({ idx: e.idx, what: `Unlock: ${e.label} (${(e.fracFD * 100).toFixed(1)}% of stock)` })),
+    ...EARN.map(e => ({ idx: e.idx, what: `Earnings reaction (${e.key.toUpperCase()}, assumed date)` })),
+    { idx: LTCG_IDX, what: 'First long-term-gains session (1 year + 1 day)' }].sort((a, b) => a.idx - b.idx);
+  const hr = el('tr'); ['Session', 'Date', 'Event', 'Median', 'Middle-80%', 'P(< offer)', `Median net on ${fmtMoney(state.pos)}`].forEach((h, i) => hr.append(el('th', { textContent: h, className: i >= 3 ? 'r' : '' })));
+  t.append(el('thead', {}, hr));
+  const tb = el('tbody');
+  for (const r of rows) {
+    const col = Y.grid[r.idx], med = Y.med[r.idx], pb = fracBelow(col, entry);
+    const row = el('tr', {}, el('td', { textContent: String(r.idx) }), el('td', { textContent: dateYY(r.idx), style: 'white-space:nowrap' }),
+      el('td', { textContent: r.what }), el('td', { className: 'r', textContent: fmtPx(med) }),
+      el('td', { className: 'r', textContent: `${fmtPx(pctile(col, .1))}–${fmtPx(pctile(col, .9))}`, style: 'white-space:nowrap' }),
+      el('td', { className: 'r ' + (pb > .4 ? 'neg' : pb > .25 ? 'neu' : 'pos'), textContent: (pb * 100).toFixed(0) + '%' }),
+      el('td', { className: 'r ' + cls(med / entry - 1), textContent: fmtNet(shares * med - state.pos) }));
+    row.style.cursor = 'pointer'; row.title = 'Set as exit session';
+    row.addEventListener('click', () => { const ex = document.getElementById('exitDay'); ex.value = Math.max(1, r.idx); ex.dataset.touched = '1'; rerender.yearView(); });
+    tb.append(row);
+  }
+  t.append(tb);
+}
+
+function renderExitButtons() {
+  const host = document.getElementById('exitBtns'); host.textContent = '';
+  const find = (k) => UNLOCKS.find(e => e.key === k);
+  const opts = [['Flip-lock end', FLIP_IDX], ['Before first tranche', find('d27') ? find('d27').idx - 1 : null],
+    ['Before FY26 unlock', find('fy') ? find('fy').idx - 1 : null], ['180-day release', find('q1') ? find('q1').idx : null], ['1 year (LTCG)', LTCG_IDX]];
+  for (const [lab, idx] of opts) {
+    if (!(idx >= 1)) continue;
+    const b = el('button', { className: 'btn sm', textContent: `${lab} · ${CAL[idx].short}` });
+    b.addEventListener('click', () => { const ex = document.getElementById('exitDay'); ex.value = idx; ex.dataset.touched = '1'; rerender.yearView(); });
+    host.append(b);
+  }
+}
+
+function renderScorecard() {
   const { A, B, C } = scoreData;
-  const host = document.getElementById('scorecard'); if(!host) return;
-  const hdr = document.getElementById('scoreHdr');
-  if (hdr) hdr.textContent = `Three-strategy scorecard — net $ on ${fmtMoney(state.pos)}`;
-  host.textContent='';
-  if(!A || !B || !C) return;
-  const money = (v, se)=> el('td', {
-    textContent: fmtNet(v) + (se != null ? ` ±${Math.round(se).toLocaleString()}` : ''),
-    style:'padding:6px 14px;text-align:right;color:'+(v>=0?'#28d17c':'#ff5c6c') });
-  const th = (t)=> el('th', { textContent:t, style:'padding:6px 14px;text-align:left;color:#9a8fc0;border-bottom:1px solid #2a2440' });
-  const td = (t,align)=> el('td', { textContent:t, style:`padding:6px 14px;text-align:${align||'left'}` });
-  const tbl = el('table', { style:'border-collapse:collapse;font-size:14px;min-width:520px' });
-  tbl.append(el('tr', {}, th(''), th('A · allocation, Day-1'), th('B · bottom-feed, Day-1'), th(`C · hold to day ${C.exitDay}`)));
-  tbl.append(el('tr', {}, td('Mean net $ (± MC error)'), money(A.mean, A.se), money(B.mean, B.se), money(C.mean, C.se)));
-  tbl.append(el('tr', {}, td('Median net $'), money(A.median), money(B.median), money(C.median)));
-  tbl.append(el('tr', {}, td('Middle-90%'),
-    td(`${fmtNet(A.p5)} to ${fmtNet(A.p95)}`,'right'),
-    td(`${fmtNet(B.p5)} to ${fmtNet(B.p95)}`,'right'),
-    td(`${fmtNet(C.p5)} to ${fmtNet(C.p95)}`,'right')));
-  tbl.append(el('tr', {}, td('P(loss)'),
-    td((A.pLoss*100).toFixed(0)+'%','right'), td((B.pLoss*100).toFixed(0)+'%','right'), td((C.pLoss*100).toFixed(0)+'%','right')));
-  tbl.append(el('tr', {}, td('Key odds'), td(A.sig), td(B.sig), td(C.sig)));
-  host.append(tbl);
+  const host = document.getElementById('scorecard'); host.textContent = '';
+  setText('scoreHdr', `Three-strategy scorecard — net $ on ${fmtMoney(state.pos)}`);
+  if (!A || !B || !C) return;
+  const money = (v, se) => el('td', { className: 'r', textContent: fmtNet(v) + (se != null ? ` ±${Math.round(se).toLocaleString()}` : ''), style: 'color:' + (v >= 0 ? '#3ccf8e' : '#ff6b6b') });
+  const td = (t) => el('td', { className: 'r', textContent: t });
+  const hr = el('tr'); ['', 'A · allocation, sell Day 1', 'B · bottom-feed Day 1', `C · hold to ${CAL[C.exitDay].short} '${CAL[C.exitDay].iso.slice(2, 4)}`].forEach((h, i) => hr.append(el('th', { textContent: h, className: i ? 'r' : '' })));
+  const tb = el('tbody');
+  tb.append(el('tr', {}, el('td', { textContent: 'Mean net $ (± MC error)' }), money(A.mean, A.se), money(B.mean, B.se), money(C.mean, C.se)));
+  tb.append(el('tr', {}, el('td', { textContent: 'Median net $' }), money(A.median), money(B.median), money(C.median)));
+  tb.append(el('tr', {}, el('td', { textContent: 'Middle-90%' }), td(`${fmtNet(A.p5)} to ${fmtNet(A.p95)}`), td(`${fmtNet(B.p5)} to ${fmtNet(B.p95)}`), td(`${fmtNet(C.p5)} to ${fmtNet(C.p95)}`)));
+  tb.append(el('tr', {}, el('td', { textContent: 'P(loss)' }), td((A.pLoss * 100).toFixed(0) + '%'), td((B.pLoss * 100).toFixed(0) + '%'), td((C.pLoss * 100).toFixed(0) + '%')));
+  tb.append(el('tr', {}, el('td', { textContent: 'Median after tax' }), money(afterTax(A.median, A.tax)), money(afterTax(B.median, B.tax)), money(afterTax(C.median, C.tax))));
+  tb.append(el('tr', {}, el('td', { textContent: 'Key odds' }), td(A.sig), td(B.sig), td(C.sig)));
+  host.append(el('table', { className: 't', style: 'min-width:640px' }, el('thead', {}, hr), tb));
 }
 
-function updateLiveStrip(dis){
+function updateLiveStrip(dis) {
   const hl = live.hl;
-  setText('hlMark', '$'+hl.mark.toFixed(2));
-  const chg = hl.prevDay ? (hl.mark/hl.prevDay - 1) : 0;
-  setText('hlChg', (chg>=0?'+':'')+(chg*100).toFixed(1)+'% 24h');
-  const {thresh:_t,above:_a}=curveArrays(theCurve());
-  setText('polyPx', '$'+ (medianCapT(_t,_a)*1e12/state.shares).toFixed(0));
+  setText('hlMark', fmtPx(hl.mark));
+  const chg = hl.prevDay ? (hl.mark / hl.prevDay - 1) : 0;
+  setText('hlChg', fmtPct(chg) + ' 24h');
+  const { thresh, above } = curveArrays(theCurve());
+  const closePs = medianCapT(thresh, above) * 1e12 / state.shares;
+  setText('polyPx', fmtPx(closePs));
+  setText('polyOffer', fmtPx(polyOfferPerShare()));
+  const pc = document.getElementById('popChip'); pc.textContent = 'crowd pop ' + fmtPct(closePs / polyOfferPerShare() - 1); pc.className = 'pill green';
   const b = document.getElementById('liveBadge');
-  b.textContent = live.status==='live' ? 'live' : live.status==='partial' ? 'partial (some last-known)' : 'last-known data';
-  b.className = 'pill '+(live.status==='live'?'green':'warn');
-  const dc = document.getElementById('disChip');
-  dc.textContent = 'agreement: '+dis.tier+' ('+(dis.absPct*100).toFixed(0)+'%)';
-  dc.className = 'pill '+(dis.tier==='high'?'green':dis.tier==='low'?'warn':'');
-  const fc = document.getElementById('fundChip');
-  const f = live.hl.funding||0;
-  fc.textContent = 'funding '+(f>=0?'+':'')+(f*100).toFixed(4)+'% '+(f>=0?'(longs pay)':'(shorts pay)');
-  fc.className = 'pill';
-  setText('asOf', 'as of '+live.asOf);
+  b.textContent = live.status === 'live' ? 'live' : live.status === 'partial' ? 'partial (some last-known)' : 'last-known data';
+  b.className = 'pill ' + (live.status === 'live' ? 'green' : 'warn');
+  const dc = document.getElementById('disChip'); dc.textContent = 'HL vs Poly: ' + dis.tier + ' agreement (' + (dis.absPct * 100).toFixed(0) + '%)';
+  dc.className = 'pill ' + (dis.tier === 'high' ? 'green' : dis.tier === 'low' ? 'warn' : '');
+  const f = hl.funding || 0;
+  setText('fundChip', 'funding ' + (f >= 0 ? '+' : '') + (f * 100).toFixed(4) + '%/h ' + (f >= 0 ? '(longs pay)' : '(shorts pay)'));
+  const d = live.date; let tot = d.pNone; for (const x of d.dates) tot += x.p;
+  const pBy = d.dates.reduce((a, x) => a + x.p, 0) / (tot || 1);
+  const mode = d.modeIso ? d.modeIso.slice(5).replace('-', '/') : '—';
+  setText('dateChip', `listing: most likely ${mode} · ${(pBy * 100).toFixed(0)}% by Nov 30`);
+  const r = curveArrays(live.raiseCurve);
+  setText('raiseChip', `raise ≈ $${Math.round(medianCapT(r.thresh, r.above) * 1000)}B`);
+  setText('asOf', 'as of ' + live.asOf);
+  setText('ipoLbl', CAL[0].label);
 }
 
-// ---- Chart A: intraday probability heatmap (custom canvas) ----
-function heatColor(t){ // t in 0..1 → dark → purple → amber
-  t=Math.max(0,Math.min(1,t));
-  const stops=[[10,14,23],[58,44,99],[124,92,255],[181,139,255],[255,231,160]];
-  const x=t*(stops.length-1),i=Math.floor(x),f=x-i,a=stops[i],b=stops[Math.min(i+1,stops.length-1)];
-  return `rgb(${a[0]+(b[0]-a[0])*f|0},${a[1]+(b[1]-a[1])*f|0},${a[2]+(b[2]-a[2])*f|0})`;
-}
-function niceTicks(lo,hi,n){const out=[];for(let i=0;i<=n;i++){const v=Math.round((lo+(hi-lo)*i/n)/5)*5;if(!out.includes(v))out.push(v);}return out;}
-const HEAT={}; // geometry cache for hover
-function drawHeatmap(grid,entry){
-  const cv=document.getElementById('heatChart'),wrap=cv.parentElement,dpr=window.devicePixelRatio||1;
-  const W=wrap.clientWidth,H=wrap.clientHeight;
-  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
-  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-  const steps=grid.length,N=grid[0].length,NB=56,padL=52,padR=14,padT=12,padB=26;
-  const plotW=W-padL-padR,plotH=H-padT-padB;
-  // adaptive price window: 5th–95th pct across the session, always including the entry line
-  const yMin=Math.min(...grid.map(c=>pctile(c,.05)),entry*0.97),yMax=Math.max(...grid.map(c=>pctile(c,.95)));
-  const cells=grid.map(col=>{const c=new Array(NB).fill(0);
-    for(const x of col){const b=Math.floor((x-yMin)/(yMax-yMin)*NB);if(b>=0&&b<NB)c[b]++;}return c.map(v=>v/N);});
-  let maxv=0;cells.forEach(c=>c.forEach(v=>{if(v>maxv)maxv=v;}));
-  const cw=plotW/steps,rh=plotH/NB;
-  for(let s=0;s<steps;s++)for(let b=0;b<NB;b++){
-    ctx.fillStyle=heatColor(Math.pow(cells[s][b]/maxv,0.7));
-    ctx.fillRect(padL+s*cw,padT+(NB-1-b)*rh,Math.ceil(cw)+1,Math.ceil(rh)+1);
-  }
-  const yOf=p=>padT+plotH-((p-yMin)/(yMax-yMin))*plotH,xOfStep=s=>padL+(s+0.5)*cw;
-  const med=grid.map(c=>pctile(c,.5));
-  ctx.strokeStyle='#fff';ctx.lineWidth=2.2;ctx.beginPath();
-  med.forEach((p,s)=>{const x=xOfStep(s),y=yOf(p);s?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
-  ctx.strokeStyle='#ffb648';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
-  ctx.beginPath();ctx.moveTo(padL,yOf(entry));ctx.lineTo(W-padR,yOf(entry));ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle=TICK;ctx.font='11px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
-  niceTicks(yMin,yMax,5).forEach(p=>{if(p>=yMin&&p<=yMax)ctx.fillText('$'+p,padL-6,yOf(p));});
-  ctx.textAlign='center';ctx.textBaseline='top';
-  STEP_LABELS.forEach((l,s)=>{if(s%2===0||s===steps-1)ctx.fillText(l,xOfStep(s),H-padB+6);});
-  setText('heatPeak',(maxv*100).toFixed(1)+'%');
-  setText('heatEntryLbl','$'+entry);
-  Object.assign(HEAT,{cells,steps,NB,yMin,yMax,padL,padR,padT,padB,plotH,cw,rh,W});
-}
-function heatHover(e){
-  const cv=document.getElementById('heatChart'),tip=document.getElementById('heatTip'),h=HEAT;
-  if(!h.cells)return;
-  const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-  if(mx<h.padL||mx>h.W-h.padR||my<h.padT||my>h.padT+h.plotH){tip.style.display='none';return;}
-  const s=Math.floor((mx-h.padL)/h.cw),b=h.NB-1-Math.floor((my-h.padT)/h.rh);
-  if(s<0||s>=h.steps||b<0||b>=h.NB){tip.style.display='none';return;}
-  const frac=h.cells[s][b],price=h.yMin+(b+0.5)/h.NB*(h.yMax-h.yMin);
-  tip.textContent='≈ $'+price.toFixed(0)+' at '+STEP_LABELS[s]+' — '+(frac*100).toFixed(1)+'% of paths';
-  tip.style.left=(h.padL+(s+0.5)*h.cw)+'px';tip.style.top=my+'px';tip.style.display='block';
-}
-// ---- Case C: day-by-day probability heatmap (custom canvas) ----
-const DHEAT={}; // geometry cache for hover
-function drawDayHeat(grid, entry, exitDay, catIdx, lockIdx){
-  const cv=document.getElementById('fan20'),wrap=cv.parentElement,dpr=window.devicePixelRatio||1;
-  const W=wrap.clientWidth,H=wrap.clientHeight;
-  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
-  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-  const days=grid.length,N=grid[0].length,NB=64,padL=56,padR=20,padT=18,padB=34;
-  const plotW=W-padL-padR,plotH=H-padT-padB;
-  // adaptive price window: 3rd–97th pct across the whole horizon, always bracketing the $135 entry.
-  let yMin=Infinity,yMax=-Infinity;
-  for(let d=0;d<days;d++){ yMin=Math.min(yMin,pctile(grid[d],.03)); yMax=Math.max(yMax,pctile(grid[d],.97)); }
-  yMin=Math.min(yMin,entry*0.97); yMax=Math.max(yMax,entry*1.03);
-  const span=yMax-yMin||1;
-  const cells=[]; let maxv=0;
-  for(let d=0;d<days;d++){ const c=new Array(NB).fill(0);
-    for(const x of grid[d]){ const bnum=Math.floor((x-yMin)/span*NB); if(bnum>=0&&bnum<NB)c[bnum]++; }
-    const cn=c.map(v=>v/N); cells.push(cn); for(const v of cn) if(v>maxv)maxv=v; }
-  const cw=plotW/days,rh=plotH/NB;
-  for(let d=0;d<days;d++)for(let bnum=0;bnum<NB;bnum++){
-    ctx.fillStyle=heatColor(Math.pow(cells[d][bnum]/maxv,0.7));
-    ctx.fillRect(padL+d*cw,padT+(NB-1-bnum)*rh,Math.ceil(cw)+1,Math.ceil(rh)+1);
-  }
-  const yOf=v=>padT+plotH-((v-yMin)/span)*plotH, xOf=d=>padL+(d+0.5)*cw;
-  // median path
-  const med=grid.map(c=>pctile(c,.5));
-  ctx.strokeStyle='#fff';ctx.lineWidth=2.2;ctx.beginPath();
-  med.forEach((v,d)=>{const x=xOf(d),y=yOf(v);d?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
-  // $135 basis
-  ctx.strokeStyle='#ffb648';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
-  ctx.beginPath();ctx.moveTo(padL,yOf(entry));ctx.lineTo(W-padR,yOf(entry));ctx.stroke();ctx.setLineDash([]);
-  // $270 Grok zone (or top annotation if off-scale)
-  ctx.font='10px sans-serif';ctx.textAlign='left';
-  if(270<=yMax&&270>=yMin){ ctx.strokeStyle='#ff5c6c';ctx.setLineDash([2,3]);ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(padL,yOf(270));ctx.lineTo(W-padR,yOf(270));ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle='#ff8d99';ctx.fillText('$270 Grok zone',padL+4,yOf(270)-3);
-  } else { ctx.fillStyle='#ff8d99';ctx.fillText('↑ $270 Grok zone (off-scale)',padL+4,padT+10); }
-  // vertical markers: flip-lock end (Mon Jun 29) + Jul 7 catalyst + chosen exit
-  const vline=(d,color,label)=>{ if(d<0||d>=days)return; const x=xOf(d);
-    ctx.strokeStyle=color;ctx.lineWidth=1.2;ctx.setLineDash([3,3]);
-    ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,padT+plotH);ctx.stroke();ctx.setLineDash([]);
-    if(label){ctx.fillStyle=color;ctx.font='10px sans-serif';ctx.textAlign='center';ctx.fillText(label,x,padT-6);} };
-  vline(lockIdx,'#b9a7ff',lockIdx===exitDay?'':'lock ends');
-  vline(catIdx,'#4da3ff','Jul 7');
-  vline(exitDay,'#28d17c',lockIdx===exitDay?'exit · lock ends':'exit');
-  // y ticks
-  ctx.fillStyle=TICK;ctx.font='11px sans-serif';ctx.textAlign='right';ctx.textBaseline='middle';
-  niceTicks(yMin,yMax,6).forEach(v=>{if(v>=yMin&&v<=yMax)ctx.fillText('$'+v,padL-6,yOf(v));});
-  // x date ticks
-  ctx.textAlign='center';ctx.textBaseline='top';
-  for(let d=0;d<days;d++){ if(d%3===0||d===days-1){ ctx.fillText(TDAYS[d]?TDAYS[d].short:('D'+d),xOf(d),H-padB+8); } }
-  setText('dheatPeak',(maxv*100).toFixed(1)+'%');
-  Object.assign(DHEAT,{cells,days,NB,yMin,yMax,span,padL,padR,padT,padB,plotH,cw,rh,W});
-}
-function dayHeatHover(e){
-  const cv=document.getElementById('fan20'),tip=document.getElementById('fan20Tip'),h=DHEAT;
-  if(!h.cells)return;
-  const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-  if(mx<h.padL||mx>h.W-h.padR||my<h.padT||my>h.padT+h.plotH){tip.style.display='none';return;}
-  const d=Math.floor((mx-h.padL)/h.cw),bnum=h.NB-1-Math.floor((my-h.padT)/h.rh);
-  if(d<0||d>=h.days||bnum<0||bnum>=h.NB){tip.style.display='none';return;}
-  const frac=h.cells[d][bnum],price=h.yMin+(bnum+0.5)/h.NB*h.span;
-  tip.textContent='≈ $'+price.toFixed(0)+' on '+(TDAYS[d]?TDAYS[d].short:('day '+d))+' — '+(frac*100).toFixed(1)+'% of paths';
-  tip.style.left=(h.padL+(d+0.5)*h.cw)+'px';tip.style.top=my+'px';tip.style.display='block';
-}
-// ---- Chart B: touch-probability ladder ----
-function drawTouch(lows,highs,entry){
-  const lo=Math.min(pctile(lows,.005),entry*0.96),hi=pctile(highs,.995),bins=56;
-  const mids=Array.from({length:bins},(_,i)=>lo+(i+0.5)*(hi-lo)/bins);
-  const touch=mids.map(m=>{let c=0;for(let i=0;i<lows.length;i++)if(lows[i]<=m&&highs[i]>=m)c++;return c/lows.length*100;});
-  const colors=mids.map(m=>m>=entry?'rgba(40,209,124,.8)':'rgba(255,92,108,.82)');
-  if(touchChart)touchChart.destroy();
-  touchChart=new Chart(document.getElementById('touchChart'),{type:'bar',
-    data:{labels:mids.map(m=>'$'+m.toFixed(0)),datasets:[{data:touch,backgroundColor:colors,barPercentage:1,categoryPercentage:1}]},
-    options:baseOpts({scales:{x:{grid:{display:false},ticks:{color:TICK,maxTicksLimit:10}},
-      y:{grid:{color:GRID},ticks:{color:TICK,callback:v=>v+'%'},title:{display:true,text:'chance price trades here during the day',color:TICK}}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>'price ≈ '+c[0].label,label:c=>(+c.raw).toFixed(1)+'% chance it touches here'}}}})});
+// ---------------- static S-1 panels ----------------
+function renderS1() {
+  metricCards(document.getElementById('s1kpis'), [
+    { k: 'H1 2026 revenue', v: '$16.3B', c: 'pos', s: '14× H1 2025 ($1.16B)' },
+    { k: 'Q2 2026 revenue', v: '$11.6B', c: 'pos', s: '2.4× Q1 · 52% left after all compute' },
+    { k: 'Adj. operating margin H1', v: '+10%', c: 'pos', s: 'GAAP −4% · first positive half' },
+    { k: 'Cash & investments', v: '$131.7B', c: 'neu', s: 'June 30 2026, before the IPO' },
+    { k: 'Last private price', v: '$58.90/sh', c: 'neu', s: 'Series H $589.01 pref ÷ 10 · ≈$1.0T' },
+    { k: 'Net revenue retention', v: '~900%', c: 'pos', s: 'as of Sep 30 2026' },
+    { k: '$1M+ customers', v: '1,900+', c: 'pos', s: '~250 at $10M+ · 11,900+ at $100k+' },
+    { k: 'Named compute contracts', v: '≈$388B', c: 'neg', s: 'SpaceXAI, Broadcom, Nscale, Lambda, AMD' },
+  ]);
+  const rows = [
+    ['Ticker / venue', 'ANT · Nasdaq Global Select · 22 underwriters led by Goldman Sachs, Morgan Stanley, J.P. Morgan'],
+    ['Price range, size, date', 'Blank in the initial S-1 — Polymarket: ~$1.5–1.75T valuation, ~$100B raise, Nov 18–20'],
+    ['Voting control', 'Class F (Founder LLC, 7 co-founders) = 50.1% of votes; LTBT elects a board majority via Class T; Class N (strategics) non-voting · "controlled company"'],
+    ['Lock-up', "Staggered: day-1 employee release, tranches at days 27/48/62/76, FY26 earnings + 5 more, all 180-day stock at the Q1'27 release; founders and >0.5% holders to Q3'27 / day 365"],
+    ['Amazon notes', '$6.2B convertible into up to 1.84B Class N shares at $2.09–$5.05 (ownership-capped; leftover notes convert quarterly at the lowest of fixed / IPO / 10-day VWAP)'],
+    ['Public Benefit Fund', '846.8M Class N shares (5% of FD) contributed; board may add up to 2% more per year — a standing dilution source'],
+    ['SpaceXAI compute', 'Up to $120.5B into 2029, ≈$3.1B/mo at full delivery (Dec 2026); cancellable on 90 days after Jan/Mar 2027'],
+    ['Other compute', 'Broadcom leases ≈$161.2B (5-yr) · Nscale ≈$44.6B to 2033 · Lambda ≈$41.3B to 2034 · AMD Helios >$20B from 2027'],
+    ['GAAP net loss H1', '$80.7B — almost all a $72.4B non-cash mark-up of convertible notes as the valuation rose; not an operating loss'],
+  ];
+  const t = document.getElementById('s1facts'); t.textContent = '';
+  const tb = el('tbody'); rows.forEach(([k, v]) => tb.append(el('tr', {}, el('td', { textContent: k, style: 'color:#f0b49b;vertical-align:top;min-width:110px' }), el('td', { textContent: v }))));
+  t.append(tb);
+  if (qChart) qChart.destroy();
+  qChart = new Chart(document.getElementById('qChart'), { type: 'bar',
+    data: { labels: ["Q1'25", "Q2'25", "Q3'25", "Q4'25", "Q1'26", "Q2'26"], datasets: [
+      { label: 'Revenue', data: [0.376, 0.787, 1.382, 2.040, 4.731, 11.555], backgroundColor: ACC },
+      { label: 'Compute & infrastructure', data: [0.944, 1.390, 2.047, 2.945, 3.387, 5.558], backgroundColor: '#6aa8ff' }] },
+    options: baseOpts({ plugins: { legend: { display: true, labels: { color: TICK } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: $${(+c.raw).toFixed(2)}B` } } },
+      scales: { x: { grid: { display: false }, ticks: { color: TICK } }, y: { grid: { color: GRID }, ticks: { color: TICK, callback: v => '$' + v + 'B' } } } }) });
+  const topics = [['Compute', 13.4], ['Regulation', 12.7], ['Privacy & IP', 11.6], ['AI safety', 11.5], ['Money', 11.4], ['Competition', 9.7], ['Governance', 7.2], ['Other operating', 6.9], ['Customers', 5.4], ['Stock', 5.4], ['People', 2.5], ['Tax', 2.3]];
+  const comp = [['Data centers', 3311], ['Financing', 2547], ['Power', 2404], ['Chips', 2123], ['Cloud providers', 1095], ['Labor', 134], ['No theme term', 2048]];
+  const bars = (host, data, max, fmt) => { const h = document.getElementById(host); h.textContent = '';
+    for (const [k, v] of data) h.append(el('div', { className: 'rf' }, el('span', { textContent: k }),
+      el('div', {}, el('div', { className: 'bar', style: `width:${(v / max * 100).toFixed(1)}%;${k === 'No theme term' ? 'background:#5a5560' : ''}` })),
+      el('span', { textContent: fmt(v), style: 'text-align:right;color:#a39b94' }))); };
+  bars('rfTopics', topics, 13.4, v => v + '%');
+  bars('rfCompute', comp, 3311, v => v.toLocaleString());
 }
 
-function hist(arr,lo,hi,bins){const w=(hi-lo)/bins,c=new Array(bins).fill(0);arr.forEach(x=>{let b=Math.floor((x-lo)/w);if(b<0)b=0;if(b>=bins)b=bins-1;c[b]++;});return c;}
-function drawClose(closes,entry){
-  const lo=pctile(closes,.005),hi=pctile(closes,.995),bins=40;
-  const counts=hist(closes,lo,hi,bins);
-  const labels=Array.from({length:bins},(_,i)=>lo+(i+0.5)*(hi-lo)/bins);
-  const colors=labels.map(p=>p>=entry?'rgba(40,209,124,.75)':'rgba(255,92,108,.8)');
-  if(closeChart)closeChart.destroy();
-  closeChart=new Chart(document.getElementById('closeChart'),{type:'bar',
-    data:{labels:labels.map(p=>'$'+p.toFixed(0)),datasets:[{data:counts,backgroundColor:colors,barPercentage:1,categoryPercentage:1}]},
-    options:baseOpts({scales:{x:{grid:{display:false},ticks:{color:TICK,maxTicksLimit:9}},y:{grid:{color:GRID},ticks:{color:TICK},title:{display:true,text:'paths',color:TICK}}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>'close ≈ '+c[0].label,label:c=>c.raw+' paths'}}}})});
+// ---------------- charts ----------------
+function heatColor(t) {
+  t = Math.max(0, Math.min(1, t));
+  const stops = [[11, 11, 13], [70, 40, 31], [170, 85, 60], [217, 119, 87], [255, 231, 196]];
+  const x = t * (stops.length - 1), i = Math.floor(x), f = x - i, a = stops[i], b = stops[Math.min(i + 1, stops.length - 1)];
+  return `rgb(${a[0] + (b[0] - a[0]) * f | 0},${a[1] + (b[1] - a[1]) * f | 0},${a[2] + (b[2] - a[2]) * f | 0})`;
 }
-function drawRange(lows,highs,entry){
-  const lo=Math.min(pctile(lows,.005),entry*0.96), hi=pctile(highs,.995), bins=44;
-  const cl=hist(lows,lo,hi,bins), ch=hist(highs,lo,hi,bins);
-  const labels=Array.from({length:bins},(_,i)=>lo+(i+0.5)*(hi-lo)/bins);
-  // inline plugin: dashed vertical line at the $135 entry
-  const entryLine={id:'entryLine',afterDraw(chart){
-    const xs=chart.scales.x, area=chart.chartArea, ctx=chart.ctx;
-    const half=(area.right-area.left)/(2*bins), usable=(area.right-area.left)-2*half;
-    const px=(area.left+half)+(entry-lo)/(hi-lo)*usable;
-    ctx.save();ctx.strokeStyle='#ffb648';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
-    ctx.beginPath();ctx.moveTo(px,area.top);ctx.lineTo(px,area.bottom);ctx.stroke();
-    ctx.setLineDash([]);ctx.fillStyle='#ffb648';ctx.font='600 11px sans-serif';ctx.textAlign='left';
-    ctx.fillText('$'+entry+' entry',Math.min(px+5,area.right-66),area.top+12);ctx.restore();
-  }};
-  if(rangeChart)rangeChart.destroy();
-  rangeChart=new Chart(document.getElementById('rangeChart'),{type:'line',
-    data:{labels:labels.map(v=>'$'+v.toFixed(0)),datasets:[
-      {label:'Intraday low',data:cl,borderColor:'#ff5c6c',backgroundColor:'rgba(255,92,108,.18)',fill:true,pointRadius:0,tension:.3,borderWidth:2},
-      {label:'Intraday high',data:ch,borderColor:'#28d17c',backgroundColor:'rgba(40,209,124,.18)',fill:true,pointRadius:0,tension:.3,borderWidth:2}]},
-    options:baseOpts({scales:{x:{grid:{display:false},ticks:{color:TICK,maxTicksLimit:9},title:{display:true,text:'price ($) — your entry $'+entry,color:TICK}},y:{grid:{color:GRID},ticks:{color:TICK},title:{display:true,text:'paths',color:TICK}}},
-      plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>'≈ '+c[0].label,label:c=>c.dataset.label+': '+c.raw+' paths'}}}}),
-    plugins:[entryLine]});
+function niceTicks(lo, hi, n) { const st = (hi - lo) > 120 ? 20 : (hi - lo) > 50 ? 10 : 5; const out = []; for (let i = 0; i <= n; i++) { const v = Math.round((lo + (hi - lo) * i / n) / st) * st; if (!out.includes(v)) out.push(v); } return out; }
+function prepCanvas(id) {
+  const cv = document.getElementById(id), wrap = cv.parentElement, dpr = window.devicePixelRatio || 1;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  return { ctx, W, H };
 }
-function drawSurv(thresh, above){
-  if(survChart) survChart.destroy();
-  survChart = new Chart(document.getElementById('survChart'), { type:'line',
-    data:{ labels: thresh.map(t=>'$'+t.toFixed(1)+'T'),
-      datasets:[{ data: above, borderColor:PUR, backgroundColor:'rgba(124,92,255,.12)',
-        borderWidth:2.5, pointRadius:3, pointBackgroundColor:PUR, fill:true, tension:.2 }] },
-    options: baseOpts({ scales:{ x:{grid:{color:GRID},ticks:{color:TICK,maxTicksLimit:9}},
-      y:{grid:{color:GRID},ticks:{color:TICK,callback:v=>v+'%'},min:0,max:100} },
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>'P(cap > '+c.label+') = '+(+c.raw).toFixed(0)+'%'}} } }) });
+function binColumns(grid, yMin, yMax, NB) {
+  const N = grid[0].length; let maxv = 0;
+  const cells = grid.map(col => { const c = new Float64Array(NB); for (const x of col) { const b = Math.floor((x - yMin) / (yMax - yMin) * NB); if (b >= 0 && b < NB) c[b]++; }
+    for (let i = 0; i < NB; i++) { c[i] /= N; if (c[i] > maxv) maxv = c[i]; } return c; });
+  return { cells, maxv };
+}
+const HEAT = {};
+function drawHeatmap(grid, entry) {
+  const { ctx, W, H } = prepCanvas('heatChart');
+  const steps = grid.length, NB = 56, padL = 56, padR = 14, padT = 12, padB = 26, plotW = W - padL - padR, plotH = H - padT - padB;
+  const yMin = Math.min(...grid.map(c => pctile(c, .05)), entry * 0.97), yMax = Math.max(...grid.map(c => pctile(c, .95)));
+  const { cells, maxv } = binColumns(grid, yMin, yMax, NB);
+  const cw = plotW / steps, rh = plotH / NB;
+  for (let s = 0; s < steps; s++) for (let b = 0; b < NB; b++) { ctx.fillStyle = heatColor(Math.pow(cells[s][b] / maxv, 0.7)); ctx.fillRect(padL + s * cw, padT + (NB - 1 - b) * rh, Math.ceil(cw) + 1, Math.ceil(rh) + 1); }
+  const yOf = p => padT + plotH - ((p - yMin) / (yMax - yMin)) * plotH, xOf = s => padL + (s + 0.5) * cw;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.2; ctx.beginPath(); grid.map(c => pctile(c, .5)).forEach((p, s) => s ? ctx.lineTo(xOf(s), yOf(p)) : ctx.moveTo(xOf(s), yOf(p))); ctx.stroke();
+  ctx.strokeStyle = '#ffb648'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.moveTo(padL, yOf(entry)); ctx.lineTo(W - padR, yOf(entry)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = TICK; ctx.font = '11px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  niceTicks(yMin, yMax, 5).forEach(p => { if (p >= yMin && p <= yMax) ctx.fillText('$' + p, padL - 6, yOf(p)); });
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; STEP_LABELS.forEach((l, s) => { if (s % 2 === 0 || s === steps - 1) ctx.fillText(l, xOf(s), H - padB + 6); });
+  setText('heatPeak', (maxv * 100).toFixed(1) + '%'); setText('heatEntryLbl', fmtPx(entry));
+  Object.assign(HEAT, { cells, steps, NB, yMin, yMax, padL, padT, plotH, cw, rh });
+}
+function heatHover(e) {
+  const cv = document.getElementById('heatChart'), tip = document.getElementById('heatTip'), h = HEAT; if (!h.cells) return;
+  const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const s = Math.floor((mx - h.padL) / h.cw), b = h.NB - 1 - Math.floor((my - h.padT) / h.rh);
+  if (s < 0 || s >= h.steps || b < 0 || b >= h.NB) { tip.style.display = 'none'; return; }
+  tip.textContent = '≈ $' + (h.yMin + (b + 0.5) / h.NB * (h.yMax - h.yMin)).toFixed(0) + ' at ' + STEP_LABELS[s] + ' — ' + (h.cells[s][b] * 100).toFixed(1) + '% of paths';
+  tip.style.left = (h.padL + (s + 0.5) * h.cw) + 'px'; tip.style.top = my + 'px'; tip.style.display = 'block';
+}
+const YH = {};
+function drawYearHeat(grid, entry, exitDay) {
+  const { ctx, W, H } = prepCanvas('yearHeat');
+  const days = grid.length, NB = 70, padL = 56, padR = 14, padT = 22, padB = 46, plotW = W - padL - padR, plotH = H - padT - padB;
+  let yMin = Infinity, yMax = -Infinity;
+  for (let d = 0; d < days; d += 3) { yMin = Math.min(yMin, pctile(grid[d], .04)); yMax = Math.max(yMax, pctile(grid[d], .96)); }
+  yMin = Math.max(0, Math.min(yMin, entry * 0.9)); yMax = Math.max(yMax, entry * 1.1);
+  const { cells, maxv } = binColumns(grid, yMin, yMax, NB);
+  const cw = plotW / days, rh = plotH / NB;
+  for (let d = 0; d < days; d++) for (let b = 0; b < NB; b++) { ctx.fillStyle = heatColor(Math.pow(cells[d][b] / maxv, 0.6)); ctx.fillRect(padL + d * cw, padT + (NB - 1 - b) * rh, Math.ceil(cw) + 1, Math.ceil(rh) + 1); }
+  const yOf = v => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH, xOf = d => padL + (d + 0.5) * cw;
+  const vline = (d, color, label, dash = [3, 3], inside = false) => { if (d < 0 || d >= days) return; const x = xOf(d);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.2; ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + plotH); ctx.stroke(); ctx.setLineDash([]);
+    if (!label) return; ctx.fillStyle = color; ctx.font = '10px sans-serif'; ctx.textBaseline = 'alphabetic';
+    if (inside) { ctx.textAlign = 'right'; ctx.fillText(label, x - 4, padT + 12); }
+    else { ctx.textAlign = 'center'; ctx.fillText(label, Math.min(Math.max(x, padL + 20), W - padR - 20), padT - 6); } };
+  for (const e of EARN) vline(e.idx, '#6aa8ff', e.key.toUpperCase(), [2, 3]);
+  vline(FLIP_IDX, '#c3a6ff', 'flip ends');
+  if (exitDay !== HORIZON) vline(exitDay, '#3ccf8e', 'exit', [4, 2], true);
+  vline(LTCG_IDX, '#3ccf8e', exitDay === HORIZON ? 'exit · 1 yr (LTCG)' : '1 yr (LTCG)', [3, 3], exitDay === HORIZON || Math.abs(exitDay - LTCG_IDX) > 20);
+  const maxF = Math.max(...UNLOCKS.map(e => e.fracFD));
+  for (const e of UNLOCKS) { if (e.idx < 0) continue; const x = xOf(e.idx), h = 4 + 16 * e.fracFD / maxF;
+    ctx.fillStyle = 'rgba(255,107,107,.9)'; ctx.fillRect(x - 1.5, padT + plotH - h, 3, h); }
+  ctx.strokeStyle = '#ffb648'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.moveTo(padL, yOf(entry)); ctx.lineTo(W - padR, yOf(entry)); ctx.stroke(); ctx.setLineDash([]);
+  const base = lastYear.med[0]; ctx.strokeStyle = '#5ad1e0'; ctx.lineWidth = 1.8; ctx.beginPath();
+  SPCX.path.forEach((r, d) => { if (d >= days) return; const x = xOf(d), y = yOf(base * r); d ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+  const dl = Math.min(SPCX.path.length - 1, days - 1); ctx.fillStyle = '#5ad1e0'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('SPCX actual', xOf(dl) + 4, yOf(base * SPCX.path[dl]));
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.2; ctx.beginPath(); lastYear.med.forEach((v, d) => d ? ctx.lineTo(xOf(d), yOf(v)) : ctx.moveTo(xOf(d), yOf(v))); ctx.stroke();
+  ctx.fillStyle = TICK; ctx.font = '11px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  niceTicks(yMin, yMax, 6).forEach(v => { if (v >= yMin && v <= yMax) ctx.fillText('$' + v, padL - 6, yOf(v)); });
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  let lastMon = '', lastX = -99;
+  for (let d = 0; d < days; d++) { const m = CAL[d].mon; if (m !== lastMon) { lastMon = m; ctx.fillRect(xOf(d), padT + plotH, 1, 4); if (xOf(d) - lastX > 40) { ctx.fillText(m, xOf(d), H - padB + 8); lastX = xOf(d); } } }
+  ctx.fillStyle = '#ff8d8d'; ctx.textAlign = 'left'; ctx.fillText('▲ unlock tranches (S-1 dates; sizes assumed)', padL, H - padB + 26);
+  setText('yheatPeak', (maxv * 100).toFixed(1) + '%');
+  Object.assign(YH, { cells, days, NB, yMin, yMax, padL, padT, plotH, cw, rh, W });
+}
+function yearHover(e) {
+  const cv = document.getElementById('yearHeat'), tip = document.getElementById('yearTip'), h = YH; if (!h.cells) return;
+  const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const d = Math.floor((mx - h.padL) / h.cw), b = h.NB - 1 - Math.floor((my - h.padT) / h.rh);
+  if (d < 0 || d >= h.days || b < 0 || b >= h.NB) { tip.style.display = 'none'; return; }
+  const u = UNLOCKS.filter(x => x.idx === d).map(x => ' · unlock ' + (x.fracFD * 100).toFixed(1) + '%').join('');
+  tip.textContent = `≈ $${(h.yMin + (b + 0.5) / h.NB * (h.yMax - h.yMin)).toFixed(0)} on ${CAL[d].short} '${CAL[d].iso.slice(2, 4)} — ${(h.cells[d][b] * 100).toFixed(1)}% · median ${fmtPx(lastYear.med[d])}${u}`;
+  tip.style.left = Math.min(Math.max(h.padL + (d + 0.5) * h.cw, 150), h.W - 150) + 'px'; tip.style.top = my + 'px'; tip.style.display = 'block';
+}
+function hist(arr, lo, hi, bins) { const w = (hi - lo) / bins, c = new Array(bins).fill(0); for (const x of arr) { let b = Math.floor((x - lo) / w); if (b < 0) b = 0; if (b >= bins) b = bins - 1; c[b]++; } return c; }
+function drawTouch(lows, highs, entry) {
+  const lo = Math.min(pctile(lows, .005), entry * 0.96), hi = pctile(highs, .995), bins = 56;
+  const mids = Array.from({ length: bins }, (_, i) => lo + (i + 0.5) * (hi - lo) / bins);
+  const touch = mids.map(m => { let c = 0; for (let i = 0; i < lows.length; i++) if (lows[i] <= m && highs[i] >= m) c++; return c / lows.length * 100; });
+  if (touchChart) touchChart.destroy();
+  touchChart = new Chart(document.getElementById('touchChart'), { type: 'bar',
+    data: { labels: mids.map(m => '$' + m.toFixed(0)), datasets: [{ data: touch, backgroundColor: mids.map(m => m >= entry ? 'rgba(60,207,142,.8)' : 'rgba(255,107,107,.82)'), barPercentage: 1, categoryPercentage: 1 }] },
+    options: baseOpts({ scales: { x: { grid: { display: false }, ticks: { color: TICK, maxTicksLimit: 10 } }, y: { grid: { color: GRID }, ticks: { color: TICK, callback: v => v + '%' } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { title: c => 'price ≈ ' + c[0].label, label: c => (+c.raw).toFixed(1) + '% chance it trades here' } } } }) });
+}
+function drawClose(closes, entry) {
+  const lo = pctile(closes, .005), hi = pctile(closes, .995), bins = 40, counts = hist(closes, lo, hi, bins);
+  const labels = Array.from({ length: bins }, (_, i) => lo + (i + 0.5) * (hi - lo) / bins);
+  if (closeChart) closeChart.destroy();
+  closeChart = new Chart(document.getElementById('closeChart'), { type: 'bar',
+    data: { labels: labels.map(p => '$' + p.toFixed(0)), datasets: [{ data: counts, backgroundColor: labels.map(p => p >= entry ? 'rgba(60,207,142,.75)' : 'rgba(255,107,107,.8)'), barPercentage: 1, categoryPercentage: 1 }] },
+    options: baseOpts({ scales: { x: { grid: { display: false }, ticks: { color: TICK, maxTicksLimit: 9 } }, y: { grid: { color: GRID }, ticks: { color: TICK } } } }) });
+}
+function drawRange(lows, highs, entry) {
+  const lo = Math.min(pctile(lows, .005), entry * 0.96), hi = pctile(highs, .995), bins = 44;
+  const labels = Array.from({ length: bins }, (_, i) => lo + (i + 0.5) * (hi - lo) / bins);
+  if (rangeChart) rangeChart.destroy();
+  rangeChart = new Chart(document.getElementById('rangeChart'), { type: 'line',
+    data: { labels: labels.map(v => '$' + v.toFixed(0)), datasets: [
+      { label: 'Intraday low', data: hist(lows, lo, hi, bins), borderColor: '#ff6b6b', backgroundColor: 'rgba(255,107,107,.18)', fill: true, pointRadius: 0, tension: .3, borderWidth: 2 },
+      { label: 'Intraday high', data: hist(highs, lo, hi, bins), borderColor: '#3ccf8e', backgroundColor: 'rgba(60,207,142,.18)', fill: true, pointRadius: 0, tension: .3, borderWidth: 2 }] },
+    options: baseOpts({ scales: { x: { grid: { display: false }, ticks: { color: TICK, maxTicksLimit: 9 }, title: { display: true, text: 'price — allocation ' + fmtPx(entry), color: TICK } }, y: { grid: { color: GRID }, ticks: { color: TICK } } } }) });
+}
+function drawSurv() {
+  const c = curveArrays(theCurve()), v = curveArrays(live.valCurve);
+  const xs = [...new Set([...c.thresh, ...v.thresh])].sort((a, b) => a - b);
+  const at = (arr, t) => { const i = arr.thresh.indexOf(t); return i < 0 ? null : arr.above[i]; };
+  if (survChart) survChart.destroy();
+  survChart = new Chart(document.getElementById('survChart'), { type: 'line',
+    data: { labels: xs.map(t => '$' + t.toFixed(2) + 'T'), datasets: [
+      { label: 'IPO valuation (pricing)', data: xs.map(t => at(v, t)), borderColor: '#ffb648', borderWidth: 2.5, pointRadius: 3, spanGaps: true, tension: .2 },
+      { label: 'Day-1 closing market cap', data: xs.map(t => at(c, t)), borderColor: ACC, backgroundColor: 'rgba(217,119,87,.12)', borderWidth: 2.5, pointRadius: 3, fill: true, spanGaps: true, tension: .2 }] },
+    options: baseOpts({ scales: { x: { grid: { color: GRID }, ticks: { color: TICK } }, y: { grid: { color: GRID }, ticks: { color: TICK, callback: v => v + '%' }, min: 0, max: 100 } },
+      plugins: { legend: { display: true, labels: { color: TICK } }, tooltip: { callbacks: { label: x => `${x.dataset.label}: P(> ${x.label}) = ${(+x.raw).toFixed(0)}%` } } } }) });
 }
 
-function bind(){
-  const g=id=>document.getElementById(id);
-  g('pos').addEventListener('input',e=>{state.pos=Math.max(0,+e.target.value||0);setText('posLbl','$'+state.pos.toLocaleString());rerender.full();});
-  g('offer').addEventListener('input',e=>{state.offer=Math.max(1,+e.target.value||1);setText('offerLbl','$'+state.offer);rerender.full();});
-  g('w').addEventListener('input', e=>{ state.w=(+e.target.value)/100; setText('wLbl', e.target.value+'%'); rerender.full(); });
-  g('shares').addEventListener('input', e=>{ state.shares=Math.max(1,(+e.target.value||12.96))*1e9; setText('shLbl', (state.shares/1e9).toFixed(2)+'B'); rerender.full(); });
-  g('vol').addEventListener('input',e=>{state.vol=+e.target.value;setText('volLbl',state.vol);rerender.full();});
-  g('vol').value = state.vol; setText('volLbl', state.vol); // reflect realized-vol default
-  g('risk').addEventListener('input', e=>{ state.risk=+e.target.value; setText('riskLbl', state.risk); rerender.plan(); });
-  g('openPx').addEventListener('input', e=>{ const v=+e.target.value; state.openPx = (e.target.value==='' || !(v>0)) ? null : v; rerender.plan(); });
-  ['driftW','anchorS','eventW','exitDay'].forEach(id => document.getElementById(id).addEventListener('input', rerender.c20));
-  ['bfLimit','bfTarget','bfStop'].forEach(id => g(id).addEventListener('input', rerender.bf));
-  g('reroll').addEventListener('click',()=>{SEED=(SEED*1664525+1013904223)>>>0;reseed();render();});
-  g('heatChart').addEventListener('mousemove',heatHover);
-  g('heatChart').addEventListener('mouseleave',()=>{document.getElementById('heatTip').style.display='none';});
-  g('fan20').addEventListener('mousemove',dayHeatHover);
-  g('fan20').addEventListener('mouseleave',()=>{document.getElementById('fan20Tip').style.display='none';});
-  window.addEventListener('resize',()=>{ if(window._hmRT) clearTimeout(window._hmRT); window._hmRT=setTimeout(render,150); });
-  g('refresh').addEventListener('click', ()=>{ fetchLive(); });
+// ---------------- wiring ----------------
+function bind() {
+  const g = id => document.getElementById(id);
+  g('pos').addEventListener('input', e => { state.pos = Math.max(0, +e.target.value || 0); setText('posLbl', fmtMoney(state.pos)); rerender.full(); });
+  g('offer').addEventListener('input', e => { const v = +e.target.value; state.offerManual = (e.target.value === '' || !(v > 0)) ? null : v; rerender.full(); });
+  g('w').addEventListener('input', e => { state.w = (+e.target.value) / 100; setText('wLbl', e.target.value + '%'); rerender.full(); });
+  g('shares').addEventListener('input', e => { state.shares = Math.max(5, (+e.target.value || 17.4)) * 1e9; setText('shLbl', (state.shares / 1e9).toFixed(2) + 'B'); rerender.full(); });
+  g('vol').addEventListener('input', e => { state.vol = +e.target.value; setText('volLbl', state.vol); rerender.full(); });
+  g('vol').value = state.vol; setText('volLbl', state.vol);
+  g('ipoDate').addEventListener('change', e => { if (!e.target.value) return; state.ipoIso = e.target.value; buildCalendar(); renderExitButtons(); render(); });
+  g('risk').addEventListener('input', e => { state.risk = +e.target.value; setText('riskLbl', state.risk); rerender.plan(); });
+  g('openPx').addEventListener('input', e => { const v = +e.target.value; state.openPx = (e.target.value === '' || !(v > 0)) ? null : v; rerender.plan(); });
+  ['bfLimit', 'bfTarget', 'bfStop'].forEach(id => g(id).addEventListener('input', rerender.bf));
+  ['supply', 'anchor', 'earn', 'lvol'].forEach(id => g(id).addEventListener('input', rerender.year));
+  g('netCash').addEventListener('change', e => { state.netCashB = +e.target.value || 0; rerender.year(); });
+  g('exitDay').addEventListener('input', e => { e.target.dataset.touched = '1'; rerender.yearView(); });
+  ['acct', 'stRate', 'ltRate'].forEach(id => g(id).addEventListener('input', () => { if (lastSim) { renderExecutionPlan(lastSim); renderBottomFeed(lastSim); renderYearView(); renderScorecard(); } }));
+  g('reroll').addEventListener('click', () => { SEED = (SEED * 1664525 + 1013904223) >>> 0; render(); });
+  g('heatChart').addEventListener('mousemove', heatHover); g('heatChart').addEventListener('mouseleave', () => { g('heatTip').style.display = 'none'; });
+  g('yearHeat').addEventListener('mousemove', yearHover); g('yearHeat').addEventListener('mouseleave', () => { g('yearTip').style.display = 'none'; });
+  window.addEventListener('resize', debounce(() => { if (lastSim) { drawHeatmap(lastSim.grid, lastSim.entry); renderYearView(); } }, 150));
+  g('refresh').addEventListener('click', () => fetchLive());
 }
 
 const HL_URL = 'https://api.hyperliquid.xyz/info';
-const POLY_URL = 'https://gamma-api.polymarket.com/events?slug=spacex-ipo-closing-market-cap-above';
-
-async function fetchHyperliquid(){
+const POLY = (slug) => `https://gamma-api.polymarket.com/events?slug=${slug}`;
+async function fetchHyperliquid() {
   const [metaRes, candleRes] = await Promise.all([
-    fetch(HL_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({type:'metaAndAssetCtxs',dex:'xyz'})}),
-    fetch(HL_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({type:'candleSnapshot',req:{coin:'xyz:SPCX',interval:'1h',startTime:Date.now()-1000*60*60*24*21}})})
-  ]);
-  const hl = parseHyperliquid(await metaRes.json());
-  const vol = realizedVolFromCandles(await candleRes.json(), IPO_DAY_VOL_MULT);
-  if(!hl) throw new Error('SPCX not found');
-  return { hl, vol };
+    fetch(HL_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'metaAndAssetCtxs', dex: 'xyz' }) }),
+    fetch(HL_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'candleSnapshot', req: { coin: 'xyz:ANT', interval: '1h', startTime: Date.now() - 1000 * 60 * 60 * 24 * 21 } }) })]);
+  const hl = parseHyperliquid(await metaRes.json(), 'xyz:ANT');
+  if (!hl || !(hl.mark > 0)) throw new Error('xyz:ANT not found');
+  return { hl, vol: realizedVolFromCandles(await candleRes.json(), IPO_DAY_VOL_MULT) };
 }
-async function fetchPolymarket(){
-  const ev = await (await fetch(POLY_URL)).json();
-  const curve = parsePolymarketCurve(ev);
-  if(!curve.length) throw new Error('no Polymarket buckets');
-  return curve;
+async function fetchPolymarket() {
+  const get = async (s) => (await fetch(POLY(s))).json();
+  const [cc, val, dt, rs] = await Promise.all(['anthropic-ipo-closing-market-cap-higher-strikes', 'what-will-anthropics-ipo-valuation-be',
+    'anthropic-ipo-date', 'how-much-will-anthropic-raise-in-its-ipo'].map(get));
+  const out = { curve: parseBucketCurve(cc), valCurve: parseBucketCurve(val), date: parseDateEvent(dt), raiseCurve: parseBucketCurve(rs) };
+  if (out.curve.length < 3 || out.valCurve.length < 3) throw new Error('Polymarket buckets missing');
+  if (!out.date.dates.length) out.date = BAKED_SNAPSHOT.date;
+  if (out.raiseCurve.length < 3) out.raiseCurve = BAKED_SNAPSHOT.raiseCurve;
+  return out;
 }
-
-async function fetchLive(){
-  const badge = document.getElementById('liveBadge');
-  badge.textContent='loading…'; badge.className='pill';
-  let okHL=false, okPoly=false;
-  try { const r = await fetchHyperliquid(); live.hl=r.hl; if(r.vol){ live.vol=r.vol; state.vol=r.vol.sliderVal;
-        const vEl=document.getElementById('vol'); if(vEl){ vEl.value=r.vol.sliderVal; setText('volLbl', r.vol.sliderVal);} } okHL=true; }
-  catch(e){ console.warn('HL fetch failed', e); live.hl=BAKED_SNAPSHOT.hl; }
-  try { live.curve = await fetchPolymarket(); okPoly=true; }
-  catch(e){ console.warn('Poly fetch failed', e); live.curve=BAKED_SNAPSHOT.curve; }
-  live.status = (okHL&&okPoly) ? 'live' : (okHL||okPoly) ? 'partial' : 'snapshot';
-  live.asOf = (okHL||okPoly) ? new Date().toISOString().slice(0,16).replace('T',' ')+' UTC' : BAKED_SNAPSHOT.asOf;
+async function fetchLive() {
+  const badge = document.getElementById('liveBadge'); badge.textContent = 'loading…'; badge.className = 'pill';
+  let okHL = false, okPoly = false;
+  try { const r = await fetchHyperliquid(); live.hl = r.hl;
+    if (r.vol) { live.vol = r.vol; state.vol = r.vol.sliderVal; document.getElementById('vol').value = r.vol.sliderVal; setText('volLbl', r.vol.sliderVal); }
+    okHL = true; } catch (e) { console.warn('HL fetch failed', e); live.hl = BAKED_SNAPSHOT.hl; }
+  try { Object.assign(live, await fetchPolymarket()); okPoly = true; }
+  catch (e) { console.warn('Poly fetch failed', e); Object.assign(live, { curve: BAKED_SNAPSHOT.curve, valCurve: BAKED_SNAPSHOT.valCurve, date: BAKED_SNAPSHOT.date, raiseCurve: BAKED_SNAPSHOT.raiseCurve }); }
+  live.status = (okHL && okPoly) ? 'live' : (okHL || okPoly) ? 'partial' : 'snapshot';
+  live.asOf = (okHL || okPoly) ? new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC' : BAKED_SNAPSHOT.asOf;
   render();
 }
 
-if(typeof Chart==='undefined'){
-  const w=document.querySelector('.wrap');const d=document.createElement('div');d.className='disc';
-  d.textContent='⚠ Charts could not load. The bundled Chart.js library (vendor/chart.umd.min.js) failed to load — make sure the vendor/ folder is deployed alongside index.html, then reload.';
-  w.insertBefore(d,w.children[1]);
-} else { bind(); render(); fetchLive(); }
+if (typeof Chart === 'undefined') {
+  const w = document.querySelector('.wrap'), d = el('div', { className: 'disc', textContent: '⚠ Charts could not load: vendor/chart.umd.min.js is missing next to index.html.' });
+  w.insertBefore(d, w.children[1]);
+} else { buildCalendar(); renderExitButtons(); bind(); renderS1(); render(); fetchLive(); }
 </script>
 </body>
 </html>

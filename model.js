@@ -387,7 +387,7 @@ export function bottomFeedTicket(cfg) {
   return {
     entry: {
       type: 'BUY LIMIT', shares, limitPx: lim, tif: 'Day',
-      note: `Buy ${shares} sh limit $${px(lim)} — deploys ~$${(shares * lim).toLocaleString()} only if ${ticker} trades down to your limit. If it never prints ≤ $${px(lim)}, nothing fills and you keep $${capital.toLocaleString()} in cash.`,
+      note: `Buy ${shares} sh limit $${px(lim)} — deploys ~$${Math.round(shares * lim).toLocaleString()} only if ${ticker} trades down to your limit. If it never prints ≤ $${px(lim)}, nothing fills and you keep $${capital.toLocaleString()} in cash.`,
     },
     bracket: {
       type: 'OCO (attach on fill)', shares, sellLimitPx: target, sellStopPx: stop, tif: 'Day',
@@ -713,6 +713,9 @@ export function ltcgFirstDay(ipoIso, holidays = NASDAQ_HOLIDAYS) {
 export const ANT_LOCKUP_DEFAULTS = {
   pool180: 0.40,   // share of FD stock under the 180-day lock-up (S-1: "approximately %")
   pool365: 0.45,   // co-founders + holders >0.5% under the extended 365-day lock-up
+  // Share of unlocked stock assumed to actually hit the market: founders and strategic holders
+  // (Amazon, Google, the large funds) in the 365-day pool sell far less than employees and VCs.
+  sellThrough: { 180: 1.0, 365: 0.5 },
   earnings: { fy26: '2027-02-25', q1: '2027-05-13', q2: '2027-08-12', q3: '2027-11-11' },
   w180: { day1: 0.05, d27: 0.07, d48: 0.07, d62: 0.07, d76: 0.07,
           fy: 0.20, fy13: 0.05, fy27: 0.05, fy41: 0.05, fy55: 0.05, fy69: 0.05, q1: 0.22 },
@@ -733,7 +736,8 @@ export function antUnlockEvents(ipoIso, cfg = ANT_LOCKUP_DEFAULTS, holidays = NA
   const ev = [];
   const add = (pool, key, iso, label) => {
     const w = (pool === 180 ? cfg.w180 : cfg.w365)[key] ?? 0;
-    ev.push({ pool, key, iso, label, w, fracFD: w * (pool === 180 ? cfg.pool180 : cfg.pool365) });
+    const fracFD = w * (pool === 180 ? cfg.pool180 : cfg.pool365);
+    ev.push({ pool, key, iso, label, w, fracFD, supplyFD: fracFD * (cfg.sellThrough?.[pool] ?? 1) });
   };
   add(180, 'day1', ipoIso, 'Employee/officer early release (day 1)');
   for (const n of [27, 48, 62, 76]) add(180, `d${n}`, after(prosp, n), `Day ${n} tranche`);
@@ -753,7 +757,7 @@ export function earningsSessions(cfg = ANT_LOCKUP_DEFAULTS, holidays = NASDAQ_HO
 }
 
 // Deterministic per-day log-drift from the unlock calendar. Each tranche (fraction f of FD
-// shares) pulls the price down by kappa·f spread over the `lead` sessions BEFORE it unlocks
+// shares expected to be sold — supplyFD, else fracFD) pulls the price down by kappa·f spread over the `lead` sessions BEFORE it unlocks
 // (supply anticipation — SPCX fell 35% into its first big tranche), then gives back rho of
 // that over the `lag` sessions after (SPCX bounced ~+24% within a week of its Aug 6 release).
 // c[d-1] is the drift going INTO day d, matching simulatePostIPO's eventCurve convention.
@@ -761,7 +765,7 @@ export function supplyDriftCurve(events, days, { kappa = 1.0, rho = 0.5, lead = 
   const c = new Array(days).fill(0);
   for (const e of events) {
     if (!(e.idx > 0)) continue;                                  // day-1 float is priced into the open
-    const hit = kappa * e.fracFD;
+    const hit = kappa * (e.supplyFD ?? e.fracFD);
     for (let k = 0; k < lead; k++) { const d = e.idx - k; if (d >= 1 && d <= days) c[d - 1] -= hit / lead; }
     for (let k = 1; k <= lag; k++) { const d = e.idx + k; if (d >= 1 && d <= days) c[d - 1] += rho * hit / lag; }
   }
